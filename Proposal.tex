@@ -1,0 +1,140 @@
+\documentclass[12pt, letterpaper,titlepage]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb, bbm, bm, amsthm, graphicx}
+
+\def\bf{\mathbf}
+\newcommand{\vect}[1]{\boldsymbol{\mathbf{#1}}}
+\newcommand{\mat}[1]{\begin{bmatrix} #1 \end{bmatrix}}
+
+\title{ME 601 Project Proposal \\
+\textbf{Rendezvous \& Proximity Operations}}
+\author{Ian Ruh (\href{mailto:iruh@wisc.edu}{iruh@wisc.edu})}
+\date{March 21, 2022}
+
+\begin{document}
+\maketitle
+
+\section{Overview}
+
+I'll be utilizing the material covered in class to analyze the control
+and relative dynamics of two spacecraft in orbit around earth. This is an
+area of interest due to both its current usage in vehicle docking to space
+stations, as well as its future applications to in-orbit debris collection and
+in-orbit assembly.
+
+In order to simplify the analysis, several assumptions on the orbital
+parameters of the two spacecrafts, the configuration of actuators, the ideal
+behavior of the actuators, the control of the spacecraft attitude and knowledge
+of the spacecraft state will be made. These assumptions and their impact are
+included in the background section.
+
+\section{Background}
+
+The rendevous of two space craft, or more generally the relative positioning of
+two spacecraft in orbit, is a complex problem due to the dynamics involved. The
+first step in approaching the problem is to select a coordinate system in which
+the relative dynamics will be studied.
+
+In the rest of this document, we
+identify two space crafts: the target and the chaser. The target is assumed to
+have attitude control such that it maintains a consistent orientation with
+respect to earth's horizon, but is otherwise inert. The chaser is the vehicle
+that we will focus on controlling the position of to rendezvous
+with the target.
+
+We identify the Radial-Transverse-Normal (RTN) coordinate frame centered with
+the origin at the center of mass of the target vehicle. The three axes are
+aligned in the radial direction, along the vector from the origin of the center
+of the earth; the transverse direction, parallel to the velocity vector, and
+thus along the orbital path; and the normal direction, parralel to the orbit's
+angular momentum vector.
+
+Within this coordinate frame the following relative dynamics are derived in
+\cite{sullivan_comprehensive_2017}:
+
+\begin{equation}
+    \label{full_dynamics}
+    \begin{split}
+        \ddot{x} - 2\dot{f}_c\dot{y} - \ddot{f}_c y - \dot{f}_c^2 x & =
+            -\frac{\mu(r_c + x)}{\left[ (r_c+x)^2 + y^2 + z^2\right]^{3/2}} +
+            \frac{\mu}{r_c^2} + d_R \\
+        \ddot{y} + 2\dot{f}_c\dot{x} + \ddot{f}_c x - \dot{f}_c^2 y & =
+            -\frac{\mu y}{\left[ (r_c+x)^2 + y^2 + z^2\right]^{3/2}} + d_T \\
+        \ddot{z} & = -\frac{\mu z}{\left[ (r_c+x)^2 + y^2 + z^2\right]^{3/2}} +
+            d_N
+    \end{split}
+\end{equation}
+
+Where $f_c$ is the target's true anomaly, $r_c$ is the target's radius, and
+$\vec{d} = [d_R, d_T, d_N]^T$ represents the relative disturbing accelerations
+between the target and the chaser in the target's RTN frame.
+
+The first simplifying assumption we make is on the eccentricity of the target's
+orbit. If the target's orbit is near circular (the eccentricity is near 0),
+then $\dot{f}_c = \text{mean anomaly} = \sqrt{\frac{\mu}{a^3}}$, where $\mu$ is
+the earth's gravitational parameter ($\approx 3.9588\cdot10^{14} \text{
+km}^2/\text{s}$), and $a$ is the orbit's semi-major axis (SMA). Thus,
+$\dot{f}_c$ is constant and $\ddot{f}_c = 0$. This leads to the following
+simplified dynamics:
+
+\begin{equation}
+    \label{circular_dynamics}
+    \begin{split}
+        \ddot{x} & =
+            -\frac{\mu(r_c + x)}{\left[ (r_c+x)^2 + y^2 + z^2\right]^{3/2}} +
+            \frac{\mu}{r_c^2} + 2n\dot{y} + n^2 x + d_R \\
+        \ddot{y} & = -\frac{\mu y}{\left[ (r_c+x)^2 + y^2 + z^2\right]^{3/2}} +
+            2n\dot{x} + n^2 y + d_T \\
+        \ddot{z} & = -\frac{\mu z}{\left[ (r_c+x)^2 + y^2 + z^2\right]^{3/2}} +
+            d_N
+    \end{split}
+\end{equation}
+
+Linearizing this around the target's position, we arrive at the
+following linear dynamics \cite{cli_clohessy_nodate}:
+
+\begin{equation}
+    \label{linear_dynamics}
+    \begin{split}
+        \ddot{x} & = 3n^2 x + 2n\dot{y} \\
+        \ddot{y} & = -2n\dot{x} \\
+        \ddot{z} & = -n^2z
+    \end{split}
+\end{equation}
+
+\subsection{Other Assumptions}
+
+The reality of controlling a spacecraft involves complex actuators including
+electric propulsion, mono-propellant attitude control systems, reaction wheels,
+control moment gyros, magnetic torquers, and others. For the purposes of this
+project, only the dynamics due to gravity and idealized forces in the RTN frame
+are considered to simplify the analysis. Therefore, we are neglecting the
+attitude control of the chaser and the arrangement (and therefore selection of
+thrusters) such that we have have a force in the RTN frame as our only control
+input.
+
+\section{Project Goals}
+
+The goal of this project is to construct and compare two state feedback
+controllers for the RPO problem. The first will be a state feedback controller
+based on the linearized dyanmics \ref{linear_dynamics}, and the second will be
+an optimal control based state feedback controller using the dynamics in
+\ref{circular_dynamics}.
+
+Each controller will be tested in a simple restricted 3-body simulation of the
+dynamics, neglecting the gravitational perturbations caused by earth's
+oblateness.
+
+If time permits, both controllers will also be tested in the higher fidelity
+GNC simulator 42 \cite{42}, an open source spacecraft navigation and control
+simulator. However, doing so would also require the implementation of a basic
+attitude control system, likely relying on basic PID controllers.
+
+\bibliography{mybibfile}
+\bibliographystyle{plain}
+
+\end{document}
+
