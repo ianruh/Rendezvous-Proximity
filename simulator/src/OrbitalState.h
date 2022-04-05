@@ -14,10 +14,15 @@ namespace Simulator {
 typedef Eigen::Matrix<double, 6, 1> Vector6d;
 typedef Vector6d PV;
 typedef Vector6d COE;
+typedef Vector6d RTN;
 
 COE pvToCoe(const PV& pv);
 
 PV pvFromCoe(const COE& coe);
+
+RTN pvToCoe(const PV& pv);
+
+PV pvFromRtn(const RTN& rtn);
 
 } // namespace Simulator
 

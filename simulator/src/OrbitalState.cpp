@@ -94,5 +94,4 @@ PV pvFromCoe(const COE& coe) {
     return pv;
 }
 
-
 } // namespace Simulator

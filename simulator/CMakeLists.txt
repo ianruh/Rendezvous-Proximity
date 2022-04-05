@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 if(MSVC)
   add_compile_options(/W4 /WX)
 else()
-  add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+  add_compile_options(-Wall -Wextra -Werror)
 endif()
 
 # SWIG generates some code that this warning isn't happy with
@@ -36,6 +36,15 @@ FetchContent_Declare(
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
+# matplot++
+FetchContent_Declare(matplotplusplus
+        GIT_REPOSITORY https://github.com/alandefreitas/matplotplusplus
+        GIT_TAG v1.1.0)
+FetchContent_GetProperties(matplotplusplus)
+if(NOT matplotplusplus_POPULATED)
+    FetchContent_Populate(matplotplusplus)
+    add_subdirectory(${matplotplusplus_SOURCE_DIR} ${matplotplusplus_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
 
 ####### Eigen #######
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
@@ -53,7 +62,7 @@ add_library(simulator
     src/OrbitalState.cpp
 )
 target_include_directories(simulator PUBLIC src/)
-target_link_libraries(simulator Eigen3::Eigen)
+target_link_libraries(simulator Eigen3::Eigen matplot)
 
 ######## Executables ########
 
