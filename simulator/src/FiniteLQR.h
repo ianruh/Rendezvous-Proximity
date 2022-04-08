@@ -16,6 +16,11 @@ class FiniteLQRVehicle: public Simulator::Vehicle {
     double targetSMA;
     double timeHorizon;
 
+    std::vector<Eigen::Matrix<double, 6,6>> Pt;
+    std::vector<double> times;
+
+ public:
+
     FiniteLQRVehicle(
             double mass,
             Simulator::PV state,
@@ -24,7 +29,14 @@ class FiniteLQRVehicle: public Simulator::Vehicle {
 
     Eigen::Vector3d getControl(
             [[maybe_unused]] double t,
-            [[maybe_unused]] const Simulator::Vehicle& target) const override;
+            [[maybe_unused]] const Simulator::Vehicle& target) override;
+
+    typedef Eigen::Matrix<double, 6, 6> state_type;
+    void riccatiIteration(
+            double t0,
+            double tf);
+
+    Eigen::Matrix<double, 6, 6> interpolateP(double t) const;
 
 };
 

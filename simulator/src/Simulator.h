@@ -16,11 +16,12 @@ class Simulator;
 class Vehicle {
     friend Simulator;
  private:
-    double mass;
     PV state;
+ protected:
+    double mass;
 
  public:
-    Vehicle(double mass, PV state): mass(mass), state(state) {}
+    Vehicle(double mass, PV state): state(state), mass(mass) {}
 
     Vehicle(const Vehicle& old) {
         this->state = old.state;
@@ -33,12 +34,15 @@ class Vehicle {
 
     PV getPv() const { return this->state; }
     COE getCoe() const { return pvToCoe(this->state); }
+    RTN getRtn(const PV& reference) const {
+        return pvToRtn(this->state, reference);
+    }
 
     void integrate(double duration, Eigen::Vector3d control);
 
     virtual Eigen::Vector3d getControl(
             [[maybe_unused]] double t,
-            [[maybe_unused]] const Vehicle& target) const {
+            [[maybe_unused]] const Vehicle& target) {
         return {0.0, 0.0, 0.0};
     }
 };
