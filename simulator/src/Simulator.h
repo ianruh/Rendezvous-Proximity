@@ -5,6 +5,8 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <memory>
+#include <matplot/matplot.h>
+#include <string>
 
 namespace Simulator {
 
@@ -14,11 +16,11 @@ class Simulator;
 class Vehicle {
     friend Simulator;
  private:
-    PV state;
     double mass;
+    PV state;
 
  public:
-    Vehicle(double mass): mass(mass) {}
+    Vehicle(double mass, PV state): mass(mass), state(state) {}
 
     Vehicle(const Vehicle& old) {
         this->state = old.state;
@@ -26,6 +28,8 @@ class Vehicle {
     }
 
     Vehicle(Vehicle&& other) = default;
+
+    virtual ~Vehicle() {}
 
     PV getPv() const { return this->state; }
     COE getCoe() const { return pvToCoe(this->state); }
@@ -47,6 +51,12 @@ class Record {
     std::vector<PV> chaserState;
     std::vector<Eigen::Vector3d> targetControl;
     std::vector<Eigen::Vector3d> chaserControl;
+
+    void plotChaserRTN(matplot::axes_handle ax) const;
+    void plotECI(matplot::axes_handle ax) const;
+    void plotChaserControlVectors(matplot::axes_handle ax) const;
+    void plotDistanceOverTime(matplot::axes_handle ax) const;
+    void plotChaserControlOverTime(matplot::axes_handle ax) const;
 };
 
 class Simulator {
@@ -63,11 +73,10 @@ class Simulator {
 
     double time;
 
-    Record record;
-
     void integrate(double duration);
     
  public:
+    Record record;
 
     Simulator(std::shared_ptr<Vehicle> target,
             std::shared_ptr<Vehicle> chaser,

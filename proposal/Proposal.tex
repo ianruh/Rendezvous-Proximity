@@ -74,9 +74,9 @@ between the target and the chaser in the target's RTN frame.
 
 The first simplifying assumption we make is on the eccentricity of the target's
 orbit. If the target's orbit is near circular (the eccentricity is near 0),
-then $\dot{f}_c = \text{mean anomaly} = \sqrt{\frac{\mu}{a^3}}$, where $\mu$ is
-the earth's gravitational parameter ($\approx 3.9588\cdot10^{14} \text{
-km}^2/\text{s}$), and $a$ is the orbit's semi-major axis (SMA). Thus,
+then $\dot{f}_c = \text{mean motion} = \sqrt{\frac{\mu}{a^3}}$, where $\mu$ is
+the earth's gravitational parameter ($\approx 3.986\cdot10^{14} \text{
+m}^2/\text{s}$), and $a$ is the orbit's semi-major axis (SMA). Thus,
 $\dot{f}_c$ is constant and $\ddot{f}_c = 0$. This leads to the following
 simplified dynamics:
 
@@ -99,9 +99,9 @@ following linear dynamics \cite{cli_clohessy_nodate}:
 \begin{equation}
     \label{linear_dynamics}
     \begin{split}
-        \ddot{x} & = 3n^2 x + 2n\dot{y} \\
-        \ddot{y} & = -2n\dot{x} \\
-        \ddot{z} & = -n^2z
+        \ddot{x} & = 3n^2 x + 2n\dot{y}  + d_R \\
+        \ddot{y} & = -2n\dot{x} + d_T \\
+        \ddot{z} & = -n^2z + d_N
     \end{split}
 \end{equation}
 

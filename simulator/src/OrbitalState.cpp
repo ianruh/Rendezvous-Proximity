@@ -45,7 +45,9 @@ COE pvToCoe(const PV& pv) {
 
     double a = h*h / (MU_EARTH*(1 - e*e));
 
-    return {e, a, i, omega, Omega, f};
+    COE coe;
+    coe << e, a, i, omega, Omega, f;
+    return coe;
 }
 
 PV pvFromCoe(const COE& coe) {
@@ -92,6 +94,47 @@ PV pvFromCoe(const COE& coe) {
     pv << r_eci_vec, v_eci_vec;
 
     return pv;
+}
+
+RTN pvToRtn(const PV& pv, const PV& reference) {
+    PV relativePV = pv - reference;
+    Eigen::Vector3d relativePosition = relativePV.head(3);
+    Eigen::Vector3d relativeVelocity = relativePV.tail(3);
+
+    Eigen::Vector3d radialUnit = reference.head(3) / reference.head(3).norm();
+    Eigen::Vector3d transverseUnit = reference.tail(3) / reference.tail(3).norm();
+    Eigen::Vector3d normalUnit = radialUnit.cross(transverseUnit);
+
+    RTN rtn;
+    rtn <<
+        relativePosition.dot(radialUnit),
+        relativePosition.dot(transverseUnit),
+        relativePosition.dot(normalUnit),
+        relativeVelocity.dot(radialUnit),
+        relativeVelocity.dot(transverseUnit),
+        relativeVelocity.dot(normalUnit);
+
+    return rtn;
+}
+
+
+PV pvFromRtn(const RTN& rtn, const PV& reference) {
+    Eigen::Vector3d radialUnit = reference.head(3) / reference.head(3).norm();
+    Eigen::Vector3d transverseUnit = reference.tail(3) / reference.tail(3).norm();
+    Eigen::Vector3d normalUnit = radialUnit.cross(transverseUnit);
+
+    Eigen::Matrix3d rtn_mat;
+    rtn_mat.col(0) = radialUnit;
+    rtn_mat.col(1) = transverseUnit;
+    rtn_mat.col(2) = normalUnit;
+
+    Eigen::Vector3d rtn_pos = rtn.head(3);
+    Eigen::Vector3d rtn_vel = rtn.tail(3);
+
+    PV relativePV;
+    relativePV << rtn_mat*rtn_pos, rtn_mat*rtn_vel;
+
+    return relativePV + reference;
 }
 
 } // namespace Simulator

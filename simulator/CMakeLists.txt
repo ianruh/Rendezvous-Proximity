@@ -49,6 +49,10 @@ endif()
 ####### Eigen #######
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
+####### Boost ########
+find_package(Boost 1.70 REQUIRED)
+INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
+
 ################################# Targets #####################################
 
 ######## Libraries ########
@@ -60,14 +64,16 @@ add_library(simulator
     src/Constants.h
     src/OrbitalState.h
     src/OrbitalState.cpp
+    src/FiniteLQR.cpp
+    src/FiniteLQR.h
 )
 target_include_directories(simulator PUBLIC src/)
-target_link_libraries(simulator Eigen3::Eigen matplot)
+target_link_libraries(simulator Eigen3::Eigen matplot ${Boost_LIBRARIES})
 
 ######## Executables ########
 
 add_executable(MPCController src/MPCController.cpp)
-target_link_libraries(MPCController PRIVATE simulator)
+target_link_libraries(MPCController PRIVATE simulator Eigen3::Eigen matplot)
 
 ######## Tests ########
 enable_testing()

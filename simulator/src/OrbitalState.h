@@ -20,9 +20,9 @@ COE pvToCoe(const PV& pv);
 
 PV pvFromCoe(const COE& coe);
 
-RTN pvToCoe(const PV& pv);
+RTN pvToRtn(const PV& pv, const PV& reference);
 
-PV pvFromRtn(const RTN& rtn);
+PV pvFromRtn(const RTN& rtn, const PV& reference);
 
 } // namespace Simulator
 
