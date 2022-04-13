@@ -1,6 +1,6 @@
 #include "Simulator.h"
 #include "OrbitalState.h"
-#include "FiniteLQR.h"
+#include "InfiniteLQR.h"
 #include <matplot/matplot.h>
 #include <memory>
 #include <Eigen/Dense>
@@ -15,14 +15,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     Simulator::PV target0 = Simulator::pvFromCoe(targetCOE);
     Simulator::PV chaser0 = Simulator::pvFromCoe(chaserCOE);
     auto target =  std::make_shared<Simulator::Vehicle>(1000.0, target0);
-    auto chaser = std::make_shared<Controllers::FiniteLQRVehicle>(
+    auto chaser = std::make_shared<Controllers::InfiniteLQRVehicle>(
             100.0,         // Mass
             chaser0,       // Initial state
-            targetCOE[1],  // Target SMA
-            1);         // Time horizon
-    Simulator::Simulator sim(target, chaser);
+            targetCOE[1]); // Target SMA
+    Simulator::Simulator sim(
+            target,
+            chaser,
+            10.0,
+            1.0);
 
-    sim.simulate(10000);
+    sim.simulate(4200, true);
 
     auto fig = matplot::figure(true);
     fig->size(1920*2,1080*2);

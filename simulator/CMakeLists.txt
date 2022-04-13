@@ -66,6 +66,10 @@ add_library(simulator
     src/OrbitalState.cpp
     src/FiniteLQR.cpp
     src/FiniteLQR.h
+    src/InfiniteLQR.h
+    src/InfiniteLQR.cpp
+    src/RiccatiSolvers.h
+    src/RiccatiSolvers.cpp
 )
 target_include_directories(simulator PUBLIC src/)
 target_link_libraries(simulator Eigen3::Eigen matplot ${Boost_LIBRARIES})
