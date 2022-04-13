@@ -56,6 +56,9 @@ class Record {
     std::vector<Eigen::Vector3d> targetControl;
     std::vector<Eigen::Vector3d> chaserControl;
 
+    void write(const std::string& fileName) const;
+    static Record load(const std::string& fileName);
+
     void plotChaserRTN(matplot::axes_handle ax) const;
     void plotECI(matplot::axes_handle ax) const;
     void plotChaserControlVectors(matplot::axes_handle ax) const;

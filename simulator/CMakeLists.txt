@@ -70,6 +70,7 @@ add_library(simulator
     src/InfiniteLQR.cpp
     src/RiccatiSolvers.h
     src/RiccatiSolvers.cpp
+    src/external/rapidcsv.h
 )
 target_include_directories(simulator PUBLIC src/)
 target_link_libraries(simulator Eigen3::Eigen matplot ${Boost_LIBRARIES})

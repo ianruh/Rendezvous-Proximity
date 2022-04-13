@@ -4,11 +4,13 @@
 #include <Eigen/Dense>
 #include <cmath>
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <vector>
 #include <matplot/matplot.h>
 #include <string>
 #include <boost/numeric/odeint.hpp>
+#include "external/rapidcsv.h"
 
 namespace Simulator {
 
@@ -33,6 +35,107 @@ void Vehicle::integrate(double duration, Eigen::Vector3d control) {
 
         time += dt;
     }
+}
+
+void Record::write(const std::string& fileName) const {
+    std::ofstream file;
+    file.open(fileName);
+    // Header
+    file << "time,";
+    file << "target_x,target_y,target_z,target_vx,target_vy,target_vz,";
+    file << "chaser_x,chaser_y,chaser_z,chaser_vx,chaser_vy,chaser_vz,";
+    file << "target_cx,target_cy,target_cz,chaser_cx,chaser_cy,chaser_cz\n";
+    
+    for(size_t i = 0; i < this->times.size(); i++) {
+        file <<
+            times[i] << "," <<
+            targetState[i](0) << "," <<
+            targetState[i](1) << "," <<
+            targetState[i](2) << "," <<
+            targetState[i](3) << "," <<
+            targetState[i](4) << "," <<
+            targetState[i](5) << "," <<
+            chaserState[i](0) << "," <<
+            chaserState[i](1) << "," <<
+            chaserState[i](2) << "," <<
+            chaserState[i](3) << "," <<
+            chaserState[i](4) << "," <<
+            chaserState[i](5) << "," <<
+            targetControl[i](0) << "," <<
+            targetControl[i](1) << "," <<
+            targetControl[i](2) << "," <<
+            chaserControl[i](0) << "," <<
+            chaserControl[i](1) << "," <<
+            chaserControl[i](2) << "\n";
+    }
+
+    file.close();
+}
+
+Record Record::load(const std::string& fileName) {
+    Record record;
+    rapidcsv::Document doc(fileName);
+
+    std::vector<double> times = doc.GetColumn<double>("time");
+    std::vector<double> target_x = doc.GetColumn<double>("target_x");
+    std::vector<double> target_y = doc.GetColumn<double>("target_y");
+    std::vector<double> target_z = doc.GetColumn<double>("target_z");
+    std::vector<double> target_vx = doc.GetColumn<double>("target_vx");
+    std::vector<double> target_vy = doc.GetColumn<double>("target_vy");
+    std::vector<double> target_vz = doc.GetColumn<double>("target_vz");
+    std::vector<double> chaser_x = doc.GetColumn<double>("chaser_x");
+    std::vector<double> chaser_y = doc.GetColumn<double>("chaser_y");
+    std::vector<double> chaser_z = doc.GetColumn<double>("chaser_z");
+    std::vector<double> chaser_vx = doc.GetColumn<double>("chaser_vx");
+    std::vector<double> chaser_vy = doc.GetColumn<double>("chaser_vy");
+    std::vector<double> chaser_vz = doc.GetColumn<double>("chaser_vz");
+    std::vector<double> target_cx = doc.GetColumn<double>("target_cx");
+    std::vector<double> target_cy = doc.GetColumn<double>("target_cy");
+    std::vector<double> target_cz = doc.GetColumn<double>("target_cz");
+    std::vector<double> chaser_cx = doc.GetColumn<double>("chaser_cx");
+    std::vector<double> chaser_cy = doc.GetColumn<double>("chaser_cy");
+    std::vector<double> chaser_cz = doc.GetColumn<double>("chaser_cz");
+
+    record.times = times;
+    for(size_t i = 0; i < times.size(); i++) {
+        PV targetState;
+        targetState <<
+            target_x[i],
+            target_y[i],
+            target_z[i],
+            target_vx[i],
+            target_vy[i],
+            target_vz[i];
+
+        PV chaserState;
+        chaserState <<
+            chaser_x[i],
+            chaser_y[i],
+            chaser_z[i],
+            chaser_vx[i],
+            chaser_vy[i],
+            chaser_vz[i];
+
+        Eigen::Vector3d targetControl;
+        targetControl <<
+            target_cx[i],
+            target_cy[i],
+            target_cz[i];
+
+        Eigen::Vector3d chaserControl;
+        chaserControl <<
+            chaser_cx[i],
+            chaser_cy[i],
+            chaser_cz[i];
+
+
+        record.targetState.push_back(targetState);
+        record.chaserState.push_back(chaserState);
+        record.targetControl.push_back(targetControl);
+        record.chaserControl.push_back(chaserControl);
+    }
+
+    return record;
 }
 
 void Record::plotChaserRTN(matplot::axes_handle ax) const {
