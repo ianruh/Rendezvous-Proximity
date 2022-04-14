@@ -39,10 +39,11 @@ InfiniteLQRVehicle::InfiniteLQRVehicle(
     
     R = beta * Eigen::Matrix<double, 3, 3>::Identity();
 
-    auto P = solveRiccatiIteration(A, B, Q, R);
+    auto P = solveRiccatiEigen(A, B, Q, R);
     if(!P) {
         throw std::runtime_error("Riccati Iteration failed to converge.");
     }
+
     this->K = this->R.inverse() * this->B.transpose() * P.value();
 }
 
@@ -53,6 +54,7 @@ Eigen::Vector3d InfiniteLQRVehicle::getControl(
     Simulator::Vector6d state = this->getRtn(target.getPv());
     
     Eigen::Vector3d control = -1 * this->K * state;
+
     // This control is acceleration, so f=ma
     return control*this->mass;
 }

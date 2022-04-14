@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 if(MSVC)
   add_compile_options(/W4 /WX)
 else()
-  add_compile_options(-Wall -Wextra -Werror)
+    add_compile_options(-Wall -Wextra -Werror -Wno-unused-parameter)
 endif()
 
 # SWIG generates some code that this warning isn't happy with
@@ -53,6 +53,14 @@ find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(Boost 1.70 REQUIRED)
 INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 
+####### ArgParse ########
+FetchContent_Declare(
+  argparse
+  GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+  GIT_TAG 1a552dfd60cb8a478f7d7cb63e4814ac66ca2891
+)
+FetchContent_MakeAvailable(argparse)
+
 ################################# Targets #####################################
 
 ######## Libraries ########
@@ -77,8 +85,16 @@ target_link_libraries(simulator Eigen3::Eigen matplot ${Boost_LIBRARIES})
 
 ######## Executables ########
 
-add_executable(MPCController src/MPCController.cpp)
-target_link_libraries(MPCController PRIVATE simulator Eigen3::Eigen matplot)
+add_executable(rendevousMain
+    src/main.cpp
+    src/SimulationRuns.h
+    src/SimulationRuns.cpp
+)
+target_link_libraries(rendevousMain PRIVATE
+    simulator
+    Eigen3::Eigen
+    matplot
+    argparse)
 
 ######## Tests ########
 enable_testing()

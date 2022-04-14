@@ -76,6 +76,8 @@ class Simulator {
     double controlFrequency;
     double controlTimestep;
 
+    double controlSaturation; // acceleration in m/s/s
+
     double recordTimeStep;
 
     double time;
@@ -88,7 +90,8 @@ class Simulator {
     Simulator(std::shared_ptr<Vehicle> target,
             std::shared_ptr<Vehicle> chaser,
             double controlFrequency = 10.0,
-            double recordTimeStep = 100.0);
+            double recordTimeStep = 100.0,
+            double controlSaturation = 10.0);
 
     void simulate(double duration,
             bool quiet = false);

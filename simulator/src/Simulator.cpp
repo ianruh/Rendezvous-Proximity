@@ -49,24 +49,24 @@ void Record::write(const std::string& fileName) const {
     for(size_t i = 0; i < this->times.size(); i++) {
         file <<
             times[i] << "," <<
-            targetState[i](0) << "," <<
-            targetState[i](1) << "," <<
-            targetState[i](2) << "," <<
-            targetState[i](3) << "," <<
-            targetState[i](4) << "," <<
-            targetState[i](5) << "," <<
-            chaserState[i](0) << "," <<
-            chaserState[i](1) << "," <<
-            chaserState[i](2) << "," <<
-            chaserState[i](3) << "," <<
-            chaserState[i](4) << "," <<
-            chaserState[i](5) << "," <<
-            targetControl[i](0) << "," <<
-            targetControl[i](1) << "," <<
-            targetControl[i](2) << "," <<
-            chaserControl[i](0) << "," <<
-            chaserControl[i](1) << "," <<
-            chaserControl[i](2) << "\n";
+            std::to_string(targetState[i](0)) << "," <<
+            std::to_string(targetState[i](1)) << "," <<
+            std::to_string(targetState[i](2)) << "," <<
+            std::to_string(targetState[i](3)) << "," <<
+            std::to_string(targetState[i](4)) << "," <<
+            std::to_string(targetState[i](5)) << "," <<
+            std::to_string(chaserState[i](0)) << "," <<
+            std::to_string(chaserState[i](1)) << "," <<
+            std::to_string(chaserState[i](2)) << "," <<
+            std::to_string(chaserState[i](3)) << "," <<
+            std::to_string(chaserState[i](4)) << "," <<
+            std::to_string(chaserState[i](5)) << "," <<
+            std::to_string(targetControl[i](0)) << "," <<
+            std::to_string(targetControl[i](1)) << "," <<
+            std::to_string(targetControl[i](2)) << "," <<
+            std::to_string(chaserControl[i](0)) << "," <<
+            std::to_string(chaserControl[i](1)) << "," <<
+            std::to_string(chaserControl[i](2)) << "\n";
     }
 
     file.close();
@@ -226,7 +226,7 @@ void Record::plotChaserControlOverTime(matplot::axes_handle ax) const {
     auto yp = ax->plot(this->times, controlY);
     auto zp = ax->plot(this->times, controlZ);
     ax->xlabel("Time (s.)");
-    ax->ylabel("Force (N.)");
+    ax->ylabel("Acceleration (m/s^2.)");
     ax->legend({"X", "Y", "Z"});
     ax->hold(matplot::off);
 }
@@ -234,7 +234,8 @@ void Record::plotChaserControlOverTime(matplot::axes_handle ax) const {
 Simulator::Simulator(std::shared_ptr<Vehicle> target,
         std::shared_ptr<Vehicle> chaser,
         double controlFrequency,
-        double recordTimeStep) {
+        double recordTimeStep,
+        double controlSaturation) {
     this->target = target;
     this->chaser = chaser;
     this->targetControl = {0.0, 0.0, 0.0};
@@ -242,6 +243,7 @@ Simulator::Simulator(std::shared_ptr<Vehicle> target,
 
     this->controlFrequency = controlFrequency;
     this->controlTimestep = 1 / controlFrequency;
+    this->controlSaturation = controlSaturation;
 
     this->recordTimeStep = recordTimeStep;
 
@@ -263,6 +265,14 @@ void  Simulator::integrate(double duration) {
         this->targetControl = {0.0, 0.0, 0.0};
         this->chaserControl = this->chaser->getControl(this->time,
                 *this->target);
+
+        if(targetControl.norm() > this->controlSaturation) {
+            targetControl = targetControl / targetControl.norm() * controlSaturation;
+        }
+
+        if(chaserControl.norm() > this->controlSaturation) {
+            chaserControl = chaserControl / chaserControl.norm() * controlSaturation;
+        }
 
         this->target->integrate(dt, targetControl);
         this->chaser->integrate(dt, chaserControl);

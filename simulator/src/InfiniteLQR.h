@@ -23,8 +23,8 @@ class InfiniteLQRVehicle: public Simulator::Vehicle {
             double mass,
             Simulator::PV state,
             double targetSMA,
-            double alpha = 1.0/(15.0*15.0),
-            double beta = 1.0/(10.0*10.0));
+            double alpha = 1.0/(100.0*100.0),
+            double beta = 1.0/(0.1*0.1));
 
     Eigen::Vector3d getControl(
             [[maybe_unused]] double t,
