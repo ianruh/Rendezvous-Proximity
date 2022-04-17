@@ -1,0 +1,131 @@
+#!/bin/bash
+
+#--- Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+#---
+
+ProgName=$(basename $0)
+
+sub_help(){
+    echo "Usage: $ProgName <subcommand> [options]\n"
+    echo "Subcommands:"
+    echo "    build                 Build in release"
+    echo "    build-debug           Build in debug"
+    echo "    clean                 Clean build artifeacts"
+    echo "    run [name]            Run simulation and generate outputs"
+    echo "    runo [name]           Run simulation, generate and open outputs"
+    echo ""
+    echo "For help with each subcommand run:"
+    echo "$ProgName <subcommand> -h|--help"
+    echo ""
+}
+
+sub_build() {
+    original_wd=$(pwd)
+    cd "$(git rev-parse --show-toplevel)/simulator"
+ 
+    # Make a build dir if there isn't already one
+    if ! [[ -d build/ ]]; then
+        mkdir build
+    fi
+
+    cd build/
+
+    cmake \
+        -D CMAKE_BUILD_TYPE=Release \
+        ..
+
+    make -j16
+
+    cd "$original_wd"
+}
+
+sub_build-debug() {
+    original_wd=$(pwd)
+    cd "$(git rev-parse --show-toplevel)/simulator"
+ 
+    # Make a build dir if there isn't already one
+    if ! [[ -d build/ ]]; then
+        mkdir build
+    fi
+
+    cd build/
+
+    cmake \
+        -D CMAKE_BUILD_TYPE=Debug \
+        ..
+
+    make -j16
+
+    cd "$original_wd"
+}
+
+sub_clean() {
+    original_wd=$(pwd)
+    cd "$(git rev-parse --show-toplevel)/simulator"
+ 
+    if [[ -d build/ ]]; then
+        rm -rf build/
+    fi
+
+    cd "$original_wd"
+}
+
+sub_run() {
+    original_wd=$(pwd)
+    cd "$(git rev-parse --show-toplevel)/simulator"
+
+    # If we don't have a build dir, fail
+    if ! [[ -d build/ ]]; then
+        printf "${RED}No build directory found.${NC}\n"
+        return 1
+    fi
+ 
+    cd outputs/
+
+    ../build/rendevousMain simulate "$1" "$1"
+    if [[ "$?" != "0" ]]; then
+        printf "${RED}Simulating $1 failed.${NC}\n"
+        return 1
+    fi
+    ../build/rendevousMain visualize "$1.csv" "$1"
+    if [[ "$?" != "0" ]]; then
+        printf "${RED}Visualizing $1 failed.${NC}\n"
+        return 1
+    fi
+
+    printf "${GREEN}Simulating and visualizing $1 finished.${NC}\n"
+
+    cd "$original_wd"
+}
+
+sub_runo() {
+    original_wd=$(pwd)
+    cd "$(git rev-parse --show-toplevel)/simulator"
+
+    sub_run "$1"
+    xdg-open "outputs/$1.jpg"
+
+    cd "$original_wd"
+}
+
+subcommand=$1
+case $subcommand in
+    "" | "-h" | "--help")
+        sub_help
+        ;;
+    *)
+        shift
+        sub_${subcommand} $@
+        ret_val=$?
+        if [ $ret_val = 127 ]; then
+            echo "Error: '$subcommand' is not a known subcommand." >&2
+            echo "       Run '$ProgName --help' for a list of known subcommands." >&2
+            exit 1
+        elif [ $ret_val = 1 ]; then
+            exit 1
+        fi
+        ;;
+esac

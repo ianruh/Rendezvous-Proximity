@@ -12,7 +12,8 @@ using namespace std::string_literals;
 std::map<std::string, std::function<void(const std::string&)>> simulationRuns {
     {"below200InfiniteLQR", below200InfiniteLQR},
     {"above200InfiniteLQR", above200InfiniteLQR},
-    {"above20InfiniteLQR", above20InfiniteLQR}
+    {"above20InfiniteLQR", above20InfiniteLQR},
+    {"boxInfiniteLQRLinearTracking", boxInfiniteLQRLinearTracking}
 };
 
 void simulate(const std::string& simulatioName, const std::string& outputName) {

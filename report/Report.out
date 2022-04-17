@@ -1,0 +1,6 @@
+\BOOKMARK [1][-]{section.1}{Overview}{}% 1
+\BOOKMARK [1][-]{section.2}{Background}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Other Assumptions}{section.2}% 3
+\BOOKMARK [1][-]{section.3}{Controllers}{}% 4
+\BOOKMARK [2][-]{subsection.3.1}{Infinte LQR Linearized Stabilizing Controller}{section.3}% 5
+\BOOKMARK [2][-]{subsection.3.2}{Infinte LQR Linearized Trajectory Tracking Controller}{section.3}% 6

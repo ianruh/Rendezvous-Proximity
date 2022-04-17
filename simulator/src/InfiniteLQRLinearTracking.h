@@ -1,12 +1,14 @@
-#ifndef SRC_INFINITE_LQR_H_
-#define SRC_INFINITE_LQR_H_
+#ifndef SRC_INFINITE_LQR_LINEAR_TRACKING_H_
+#define SRC_INFINITE_LQR_LINEAR_TRACKING_H_
 #include "OrbitalState.h"
 #include "Simulator.h"
+#include "TrajectoryGeneration.h"
+#include <memory>
 #include <Eigen/Dense>
 
 namespace Controllers {
 
-class InfiniteLQRVehicle: public Simulator::Vehicle {
+class InfiniteLQRLinearTrackingVehicle: public Simulator::Vehicle {
  private:
     Eigen::Matrix<double, 6, 6> A;
     Eigen::Matrix<double, 6, 3> B;
@@ -17,14 +19,15 @@ class InfiniteLQRVehicle: public Simulator::Vehicle {
 
     Eigen::Matrix<double, 3, 6> K;
 
+    std::shared_ptr<Trajectory> targetTrajectory;
+
  public:
 
-    InfiniteLQRVehicle(
+    InfiniteLQRLinearTrackingVehicle(
             double mass,
             Simulator::PV state,
             double targetSMA,
-            double alpha = 1.0/(100.0*100.0),
-            double beta = 1.0/(0.1*0.1));
+            std::shared_ptr<Trajectory> targetTrajectory);
 
     Eigen::Vector3d getControl(
             [[maybe_unused]] double t,
@@ -34,4 +37,4 @@ class InfiniteLQRVehicle: public Simulator::Vehicle {
 
 } // namespace Controllers
 
-#endif // SRC_INFINITE_LQR_H_
+#endif // SRC_INFINITE_LQR_LINEAR_TRACKING_H_

@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <optional>
 #include <vector>
 #include <matplot/matplot.h>
 #include <string>
@@ -44,7 +45,16 @@ void Record::write(const std::string& fileName) const {
     file << "time,";
     file << "target_x,target_y,target_z,target_vx,target_vy,target_vz,";
     file << "chaser_x,chaser_y,chaser_z,chaser_vx,chaser_vy,chaser_vz,";
-    file << "target_cx,target_cy,target_cz,chaser_cx,chaser_cy,chaser_cz\n";
+    file << "target_cx,target_cy,target_cz,chaser_cx,chaser_cy,chaser_cz";
+    if(this->trackedTrajectory) {
+        file << ",tracked_trajectory_x";
+        file << ",tracked_trajectory_y";
+        file << ",tracked_trajectory_z";
+        file << ",tracked_trajectory_vx";
+        file << ",tracked_trajectory_vy";
+        file << ",tracked_trajectory_vz";
+    }
+    file << "\n";
     
     for(size_t i = 0; i < this->times.size(); i++) {
         file <<
@@ -66,7 +76,16 @@ void Record::write(const std::string& fileName) const {
             std::to_string(targetControl[i](2)) << "," <<
             std::to_string(chaserControl[i](0)) << "," <<
             std::to_string(chaserControl[i](1)) << "," <<
-            std::to_string(chaserControl[i](2)) << "\n";
+            std::to_string(chaserControl[i](2));
+        if(this->trackedTrajectory) {
+            file << "," << std::to_string(this->trackedTrajectory.value()[i](0));
+            file << "," << std::to_string(this->trackedTrajectory.value()[i](1));
+            file << "," << std::to_string(this->trackedTrajectory.value()[i](2));
+            file << "," << std::to_string(this->trackedTrajectory.value()[i](3));
+            file << "," << std::to_string(this->trackedTrajectory.value()[i](4));
+            file << "," << std::to_string(this->trackedTrajectory.value()[i](5));
+        }
+        file << "\n";
     }
 
     file.close();
@@ -95,6 +114,26 @@ Record Record::load(const std::string& fileName) {
     std::vector<double> chaser_cx = doc.GetColumn<double>("chaser_cx");
     std::vector<double> chaser_cy = doc.GetColumn<double>("chaser_cy");
     std::vector<double> chaser_cz = doc.GetColumn<double>("chaser_cz");
+
+    std::optional<std::vector<double>> tracked_trajectory_x;
+    std::optional<std::vector<double>> tracked_trajectory_y;
+    std::optional<std::vector<double>> tracked_trajectory_z;
+    std::optional<std::vector<double>> tracked_trajectory_vx;
+    std::optional<std::vector<double>> tracked_trajectory_vy;
+    std::optional<std::vector<double>> tracked_trajectory_vz;
+    std::vector<std::string> columnNames = doc.GetColumnNames();
+    bool trackedTrajectoryExists =
+      (std::find(columnNames.begin(), columnNames.end(), "tracked_trajectory_x") != columnNames.end());
+    if(trackedTrajectoryExists) {
+        record.trackedTrajectory = std::vector<Vector6d>();
+        tracked_trajectory_x = doc.GetColumn<double>("tracked_trajectory_x");
+        tracked_trajectory_y = doc.GetColumn<double>("tracked_trajectory_y");
+        tracked_trajectory_z = doc.GetColumn<double>("tracked_trajectory_z");
+        tracked_trajectory_vx = doc.GetColumn<double>("tracked_trajectory_vx");
+        tracked_trajectory_vy = doc.GetColumn<double>("tracked_trajectory_vy");
+        tracked_trajectory_vz = doc.GetColumn<double>("tracked_trajectory_vz");
+    }
+
 
     record.times = times;
     for(size_t i = 0; i < times.size(); i++) {
@@ -128,11 +167,22 @@ Record Record::load(const std::string& fileName) {
             chaser_cy[i],
             chaser_cz[i];
 
-
         record.targetState.push_back(targetState);
         record.chaserState.push_back(chaserState);
         record.targetControl.push_back(targetControl);
         record.chaserControl.push_back(chaserControl);
+
+        if(trackedTrajectoryExists) {
+            Vector6d trackedTrajectory;
+            trackedTrajectory <<
+                tracked_trajectory_x.value()[i],
+                tracked_trajectory_y.value()[i],
+                tracked_trajectory_z.value()[i],
+                tracked_trajectory_vx.value()[i],
+                tracked_trajectory_vy.value()[i],
+                tracked_trajectory_vz.value()[i];
+            record.trackedTrajectory->push_back(trackedTrajectory);
+        }
     }
 
     return record;
@@ -149,6 +199,22 @@ void Record::plotChaserRTN(matplot::axes_handle ax) const {
         z.push_back(rtn(2));
     }
 
+    if(!this->trackedTrajectory) {
+        std::cout << "WARNING: Record has no tracked trajectory.\n";
+    } else {
+        std::vector<double> x;
+        std::vector<double> y;
+        std::vector<double> z;
+        for(size_t i = 0; i < this->trackedTrajectory->size(); i++) {
+            RTN rtn = this->trackedTrajectory->at(i);
+            x.push_back(rtn(0));
+            y.push_back(rtn(1));
+            z.push_back(rtn(2));
+        }
+        auto traj = ax->plot3(x, y, z, "--");
+        ax->hold(matplot::on);
+    }
+
     std::vector<double> targetPos {0.0};
 
     auto cp = ax->plot3(x, y, z);
@@ -163,7 +229,12 @@ void Record::plotChaserRTN(matplot::axes_handle ax) const {
     tp->marker_size(20);
     ax->hold(matplot::off);
     ax->axis(matplot::equal);
-    ax->legend({"Chaser", "Target"});
+    
+    if(this->trackedTrajectory) {
+        ax->legend({"Tracked Trajectory", "Chaser", "Target"});
+    } else {
+        ax->legend({"Chaser", "Target"});
+    }
 }
 
 void Record::plotECI(matplot::axes_handle ax) const {
@@ -287,6 +358,10 @@ void Simulator::simulate(double duration,
 
     double finalTime = this->time + duration;
 
+    if(this->trackedTrajectory) {
+        this->record.trackedTrajectory = std::vector<Vector6d>();
+    }
+
     while(this->time < finalTime) {
         if(this->time + dt > finalTime) {
             dt = finalTime - this->time;
@@ -305,6 +380,11 @@ void Simulator::simulate(double duration,
         this->record.chaserState.push_back(this->chaser->getPv());
         this->record.targetControl.push_back(this->targetControl);
         this->record.chaserControl.push_back(this->chaserControl);
+
+        if(this->trackedTrajectory) {
+            Vector6d trackedState = this->trackedTrajectory.value()->getTargetState(this->time);
+            this->record.trackedTrajectory->push_back(trackedState);
+        }
         
         // Do the next timestep
         this->integrate(dt);

@@ -2,11 +2,13 @@
 #define SRC_SIMULATPR_H_
 #include <cmath>
 #include "OrbitalState.h"
+#include "TrajectoryGeneration.h"
 #include <Eigen/Dense>
 #include <vector>
 #include <memory>
 #include <matplot/matplot.h>
 #include <string>
+#include <optional>
 
 namespace Simulator {
 
@@ -55,6 +57,7 @@ class Record {
     std::vector<PV> chaserState;
     std::vector<Eigen::Vector3d> targetControl;
     std::vector<Eigen::Vector3d> chaserControl;
+    std::optional<std::vector<Vector6d>> trackedTrajectory;
 
     void write(const std::string& fileName) const;
     static Record load(const std::string& fileName);
@@ -83,6 +86,8 @@ class Simulator {
     double time;
 
     void integrate(double duration);
+
+    std::optional<std::shared_ptr<Controllers::Trajectory>> trackedTrajectory;
     
  public:
     Record record;
@@ -92,6 +97,10 @@ class Simulator {
             double controlFrequency = 10.0,
             double recordTimeStep = 100.0,
             double controlSaturation = 10.0);
+
+    void setTrackedTrajectory(std::shared_ptr<Controllers::Trajectory> trackedTrajectory) {
+        this->trackedTrajectory = trackedTrajectory;
+    }
 
     void simulate(double duration,
             bool quiet = false);

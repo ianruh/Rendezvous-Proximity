@@ -76,8 +76,12 @@ add_library(simulator
     src/FiniteLQR.h
     src/InfiniteLQR.h
     src/InfiniteLQR.cpp
+    src/InfiniteLQRLinearTracking.h
+    src/InfiniteLQRLinearTracking.cpp
     src/RiccatiSolvers.h
     src/RiccatiSolvers.cpp
+    src/TrajectoryGeneration.h
+    src/TrajectoryGeneration.cpp
     src/external/rapidcsv.h
 )
 target_include_directories(simulator PUBLIC src/)
