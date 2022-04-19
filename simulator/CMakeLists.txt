@@ -36,7 +36,7 @@ FetchContent_Declare(
     GIT_TAG        v0.9.0
 )
 FetchContent_MakeAvailable(symengine)
-include_directories(SYSTEM ${symengine_SOURCE_DIR} ${CMAKE_BINARY_DIR}/_deps/symengine-build/)
+include_directories(SYSTEM ${CMAKE_BINARY_DIR}/_deps/symengine-build/ ${symengine_SOURCE_DIR})
 set(BUILD_TESTS OFF CACHE INTERNAL "SymEngine Test Building")
 set(BUILD_BENCHMARKS OFF CACHE INTERNAL "SymEngine Benchmark Building")
 
@@ -96,6 +96,8 @@ FetchContent_MakeAvailable(argparse)
 add_library(simulator
     src/Simulator.cpp
     src/Simulator.h
+    src/CodeGen.cpp
+    src/CodeGen.h
     src/Constants.h
     src/OrbitalState.h
     src/OrbitalState.cpp
@@ -105,6 +107,8 @@ add_library(simulator
     src/InfiniteLQR.cpp
     src/InfiniteLQRLinearTracking.h
     src/InfiniteLQRLinearTracking.cpp
+    src/InfiniteLQRNonLinearTracking.h
+    src/InfiniteLQRNonLinearTracking.cpp
     src/MPCNonLinearTracking.h
     src/MPCNonLinearTracking.cpp
     src/RiccatiSolvers.h

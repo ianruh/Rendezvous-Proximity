@@ -30,9 +30,8 @@ sub_build() {
     if ! [[ -d build/ ]]; then
         mkdir build
     fi
-
+    
     cd build/
-
     cmake \
         -D CMAKE_BUILD_TYPE=Release \
         ..
@@ -52,7 +51,6 @@ sub_build-debug() {
     fi
 
     cd build/
-
     cmake \
         -D CMAKE_BUILD_TYPE=Debug \
         ..
@@ -99,6 +97,9 @@ sub_run() {
     printf "${GREEN}Simulating and visualizing $1 finished.${NC}\n"
 
     cd "$original_wd"
+}
+sub_rune() {
+    echo ../build/rendevousMain simulate "$1" "$1"
 }
 
 sub_runo() {

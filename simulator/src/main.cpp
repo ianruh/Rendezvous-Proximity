@@ -13,7 +13,8 @@ std::map<std::string, std::function<void(const std::string&)>> simulationRuns {
     {"below200InfiniteLQR", below200InfiniteLQR},
     {"above200InfiniteLQR", above200InfiniteLQR},
     {"above20InfiniteLQR", above20InfiniteLQR},
-    {"boxInfiniteLQRLinearTracking", boxInfiniteLQRLinearTracking}
+    {"boxInfiniteLQRLinearTracking", boxInfiniteLQRLinearTracking},
+    {"boxInfiniteLQRNonLinearTracking", boxInfiniteLQRNonLinearTracking}
 };
 
 void simulate(const std::string& simulatioName, const std::string& outputName) {
@@ -34,14 +35,27 @@ void visualize(const std::string& recordName, const std::string& outputName) {
 
     auto fig = matplot::figure(true);
     fig->size(1920*2,1080*2);
-    matplot::subplot(2,2,0);
+    // Trajectory in RTN
+    matplot::subplot(6,3,{0, 3, 6});
     record.plotChaserRTN(fig->current_axes());
-    matplot::subplot(2,2,1);
+    // Trajectory in ECI
+    matplot::subplot(6,3,{1, 4, 7});
     record.plotECI(fig->current_axes());
-    matplot::subplot(2,2,2);
+    // Control over time
+    matplot::subplot(6,3,{9, 12, 15});
     record.plotChaserControlOverTime(fig->current_axes());
-    matplot::subplot(2,2,3);
+    // Distance over time
+    matplot::subplot(6,3,{10,13,16});
     record.plotDistanceOverTime(fig->current_axes());
+    
+    //==== Individual states over time ==== 
+    matplot::subplot(6,3,{2,5});
+    record.plotChaserRTNState2D(fig->current_axes(), 0);
+    matplot::subplot(6,3,{8,11});
+    record.plotChaserRTNState2D(fig->current_axes(), 1);
+    matplot::subplot(6,3,{14,17});
+    record.plotChaserRTNState2D(fig->current_axes(), 2);
+
     fig->save(outputName + ".jpg");
 }
 

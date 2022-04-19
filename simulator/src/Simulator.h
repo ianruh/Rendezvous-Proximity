@@ -63,6 +63,7 @@ class Record {
     static Record load(const std::string& fileName);
 
     void plotChaserRTN(matplot::axes_handle ax) const;
+    void plotChaserRTNState2D(matplot::axes_handle ax, size_t index) const;
     void plotECI(matplot::axes_handle ax) const;
     void plotChaserControlVectors(matplot::axes_handle ax) const;
     void plotDistanceOverTime(matplot::axes_handle ax) const;

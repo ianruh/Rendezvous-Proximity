@@ -10,6 +10,7 @@
 #include <vector>
 #include <matplot/matplot.h>
 #include <string>
+#include <sstream>
 #include <boost/numeric/odeint.hpp>
 #include "external/rapidcsv.h"
 
@@ -234,6 +235,42 @@ void Record::plotChaserRTN(matplot::axes_handle ax) const {
         ax->legend({"Tracked Trajectory", "Chaser", "Target"});
     } else {
         ax->legend({"Chaser", "Target"});
+    }
+}
+
+void Record::plotChaserRTNState2D(matplot::axes_handle ax, size_t index) const {
+    std::vector<double> state;
+    for(size_t i = 0; i < this->chaserState.size(); i++) {
+        RTN rtn = pvToRtn(this->chaserState.at(i), this->targetState.at(i));
+        state.push_back(rtn(index));
+    }
+
+    if(!this->trackedTrajectory) {
+        std::cout << "WARNING: Record has no tracked trajectory.\n";
+    } else {
+        std::vector<double> trackedState;
+        for(size_t i = 0; i < this->trackedTrajectory->size(); i++) {
+            RTN rtn = this->trackedTrajectory->at(i);
+            trackedState.push_back(rtn(index));
+        }
+        auto traj = ax->plot(this->times, trackedState, "--");
+        ax->hold(matplot::on);
+    }
+
+    auto cp = ax->plot(this->times, state);
+    std::stringstream titleStream;
+    titleStream << "Chaser in RTN Frame (position index " << index << ")";
+    ax->title(titleStream.str());
+    ax->xlabel("Time (s.)");
+    ax->ylabel("Distance (m.)");
+    ax->grid(matplot::off);
+    ax->hold(matplot::on);
+    ax->hold(matplot::off);
+    
+    if(this->trackedTrajectory) {
+        ax->legend({"Tracked Trajectory", "Chaser"});
+    } else {
+        ax->legend({"Chaser"});
     }
 }
 

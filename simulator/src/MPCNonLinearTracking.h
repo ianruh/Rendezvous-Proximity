@@ -5,6 +5,8 @@
 #include "TrajectoryGeneration.h"
 #include <memory>
 #include <Eigen/Dense>
+#include <cppmpc/FastMPC.h>
+#include <cppmpc/SymbolicObjective.h>
 
 namespace Controllers {
 
@@ -21,13 +23,18 @@ class MPCNonLinearTrackingVehicle: public Simulator::Vehicle {
 
     std::shared_ptr<Trajectory> targetTrajectory;
 
+    // The objective function
+    cppmpc::FastMPC::SymbolicObjective objective;
+
  public:
 
     MPCNonLinearTrackingVehicle(
             double mass,
             Simulator::PV state,
             double targetSMA,
-            std::shared_ptr<Trajectory> targetTrajectory);
+            std::shared_ptr<Trajectory> targetTrajectory,
+            size_t numSteps = 20,
+            double timeStep = 100.0);
 
     Eigen::Vector3d getControl(
             [[maybe_unused]] double t,
