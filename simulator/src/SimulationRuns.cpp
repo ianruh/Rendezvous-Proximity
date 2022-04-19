@@ -5,7 +5,9 @@
 #include "InfiniteLQRLinearTracking.h"
 #include "InfiniteLQRNonLinearTracking.h"
 #include "TrajectoryGeneration.h"
+#include "Constants.h"
 #include <Eigen/Dense>
+#include <cmath>
 
 void below200InfiniteLQR(const std::string& fileName) {
     Simulator::COE targetCOE;
@@ -81,15 +83,19 @@ void boxInfiniteLQRLinearTracking(const std::string& fileName) {
     targetCOE << 0.0, 8000e3, 0.0, 0.0, 0.0, 0.0;
     Simulator::PV target0 = Simulator::pvFromCoe(targetCOE);
 
+    double T = 2*2 * PI * std::sqrt(std::pow(targetCOE(1), 3) / MU_EARTH);
+    double dt = T/8;
+    std::cout << "Period: " << T << "\n";
+
     // Make the set of waypoints
     std::vector<double> waypointTimes {
         0.0,
-        1000.0,
-        3000.0,
-        5000.0,
-        7000.0,
-        8000.0,
-        9000.0
+        dt,
+        3*dt,
+        5*dt,
+        7*dt,
+        T,
+        T+dt
     };
     Eigen::Vector3d waypoint0;
     Eigen::Vector3d waypoint1;
@@ -98,12 +104,12 @@ void boxInfiniteLQRLinearTracking(const std::string& fileName) {
     Eigen::Vector3d waypoint4;
     Eigen::Vector3d waypoint5;
     Eigen::Vector3d waypoint6;
-    waypoint0 << 0, 200, 0;
-    waypoint1 << 0, 200, 200;
-    waypoint2 << 0, -200, 200;
-    waypoint3 << 0, -200, -200;
-    waypoint4 << 0, 200, -200;
-    waypoint5 << 0, 200, 0;
+    waypoint0 << 0, 20, 0;         // T = 0
+    waypoint1 << 20, 20, 0;
+    waypoint2 << 20, -20, 0;
+    waypoint3 << -20, -20, 0;
+    waypoint4 << -20, 20, 0;
+    waypoint5 << 0, 20, 0;         // T = T
     waypoint6 << 0, 0, 0;
     std::vector<Eigen::Vector3d> waypoints {
         waypoint0,
@@ -118,10 +124,10 @@ void boxInfiniteLQRLinearTracking(const std::string& fileName) {
     auto trackedTrajectory = std::make_shared<Controllers::LinearPositionWaypointTrajectory>(waypointTimes, waypoints);
 
     Simulator::RTN chaserRTN0;
-    chaserRTN0 << 0, 200, 0, 0, 0, 0;
+    chaserRTN0 << 0, 20, 0, 0, 0, 0;
     Simulator::PV chaser0 = Simulator::pvFromRtn(chaserRTN0, target0);
 
-    auto target =  std::make_shared<Simulator::Vehicle>(1000.0, target0);
+    auto target = std::make_shared<Simulator::Vehicle>(1000.0, target0);
     auto chaser = std::make_shared<Controllers::InfiniteLQRLinearTrackingVehicle>(
             100.0,         // Mass
             chaser0,       // Initial state
@@ -134,7 +140,7 @@ void boxInfiniteLQRLinearTracking(const std::string& fileName) {
             1.0);
     sim.setTrackedTrajectory(trackedTrajectory);
 
-    sim.simulate(4100, true);
+    sim.simulate(4000, true);
     sim.record.write(fileName);
 }
 

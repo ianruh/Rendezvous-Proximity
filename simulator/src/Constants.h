@@ -5,4 +5,7 @@
 #define R_EARTH 6.3781e6 // m
 #define PI 3.14159265
 
+#define CPP_COMPILER_PATH "clang"
+#define RUNTIME_COMPILER_FLAGS ""
+
 #endif // SRC_CONSTANTS_H_
