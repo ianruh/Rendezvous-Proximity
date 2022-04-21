@@ -25,7 +25,7 @@ void Vehicle::integrate(double duration, Eigen::Vector3d control) {
             dt = duration - time;
         }
 
-        Eigen::Vector3d controlAccel = control / this->mass;
+        Eigen::Vector3d controlAccel = control;
         Eigen::Vector3d gravityAccel = -1 * MU_EARTH / 
             std::pow(this->state.head(3).norm(), 3) * this->state.head(3);
         Eigen::Vector3d accel = controlAccel + gravityAccel;
@@ -262,7 +262,11 @@ void Record::plotChaserRTNState2D(matplot::axes_handle ax, size_t index) const {
     titleStream << "Chaser in RTN Frame (position index " << index << ")";
     ax->title(titleStream.str());
     ax->xlabel("Time (s.)");
-    ax->ylabel("Distance (m.)");
+    if(index <= 2) {
+        ax->ylabel("Distance (m.)");
+    } else {
+        ax->ylabel("Velocity (m/s)");
+    }
     ax->grid(matplot::off);
     ax->hold(matplot::on);
     ax->hold(matplot::off);
@@ -423,10 +427,9 @@ void Simulator::simulate(double duration,
             this->record.trackedTrajectory->push_back(trackedState);
         }
         
-        // Do the next timestep
+        // Do the next timestep, no need to incrment this->time, as 
+        // integrate does it for us.
         this->integrate(dt);
-
-        this->time += dt;
     }
 }
 

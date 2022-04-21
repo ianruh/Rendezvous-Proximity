@@ -20,7 +20,6 @@ class InfiniteLQRVehicle: public Simulator::Vehicle {
  public:
 
     InfiniteLQRVehicle(
-            double mass,
             Simulator::PV state,
             double targetSMA,
             double alpha = 1.0/(100.0*100.0),

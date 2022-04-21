@@ -19,15 +19,12 @@ class Vehicle {
     friend Simulator;
  private:
     PV state;
- protected:
-    double mass;
 
  public:
-    Vehicle(double mass, PV state): state(state), mass(mass) {}
+    Vehicle(PV state): state(state) {}
 
     Vehicle(const Vehicle& old) {
         this->state = old.state;
-        this->mass = old.mass;
     }
 
     Vehicle(Vehicle&& other) = default;
@@ -97,7 +94,7 @@ class Simulator {
             std::shared_ptr<Vehicle> chaser,
             double controlFrequency = 10.0,
             double recordTimeStep = 100.0,
-            double controlSaturation = 10.0);
+            double controlSaturation = 0.01);
 
     void setTrackedTrajectory(std::shared_ptr<Controllers::Trajectory> trackedTrajectory) {
         this->trackedTrajectory = trackedTrajectory;

@@ -29,7 +29,6 @@ class MPCNonLinearTrackingVehicle: public Simulator::Vehicle {
  public:
 
     MPCNonLinearTrackingVehicle(
-            double mass,
             Simulator::PV state,
             double targetSMA,
             std::shared_ptr<Trajectory> targetTrajectory,

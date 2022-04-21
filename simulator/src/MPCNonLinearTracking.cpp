@@ -28,12 +28,11 @@ using SymEngine::integer;
 namespace Controllers {
 
 MPCNonLinearTrackingVehicle::MPCNonLinearTrackingVehicle(
-        double mass,
         Simulator::PV state,
         double targetSMA,
         std::shared_ptr<Trajectory> targetTrajectory,
         size_t numSteps,
-        double timeStep): Simulator::Vehicle(mass, state) {
+        double timeStep): Simulator::Vehicle(state) {
     // Target SMA needed to construct the linearized A matrix
     this->targetSMA = targetSMA;
     this->targetTrajectory = targetTrajectory;
@@ -160,7 +159,7 @@ Eigen::Vector3d MPCNonLinearTrackingVehicle::getControl(
     Eigen::Vector3d control = -1 * this->K * error;
 
     // This control is acceleration, so f=ma
-    return control*this->mass;
+    return control;
 }
 
 } // namespace Controllers

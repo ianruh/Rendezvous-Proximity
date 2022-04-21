@@ -71,6 +71,13 @@ sub_clean() {
     cd "$original_wd"
 }
 
+sub_run-box() {
+    sub_run box10000InfiniteLQRLinearTracking
+    sub_run box20000InfiniteLQRLinearTracking
+    sub_run box30000InfiniteLQRLinearTracking
+    sub_run boxGeoInfiniteLQRLinearTracking
+}
+
 sub_run() {
     original_wd=$(pwd)
     cd "$(git rev-parse --show-toplevel)/simulator"

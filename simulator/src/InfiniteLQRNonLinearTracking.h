@@ -23,7 +23,6 @@ class InfiniteLQRNonLinearTrackingVehicle: public Simulator::Vehicle {
  public:
 
     InfiniteLQRNonLinearTrackingVehicle(
-            double mass,
             Simulator::PV state,
             double targetSMA,
             std::shared_ptr<Trajectory> targetTrajectory);

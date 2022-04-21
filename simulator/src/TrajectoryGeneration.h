@@ -2,6 +2,7 @@
 #define SRC_TRAJECTORY_TRACKING_H_
 
 #include <cmath>
+#include <string>
 #include <vector>
 #include <algorithm>
 #include <Eigen/Dense>
@@ -58,6 +59,7 @@ class LinearPositionWaypointTrajectory: public Trajectory {
             Simulator::RTN targetState;
             targetState << this->waypoints.at(0);
             targetState << 0.0, 0.0, 0.0;
+            return targetState;
         }
 
         // This is safe, since we checked that t1Index > 0
@@ -80,6 +82,25 @@ class LinearPositionWaypointTrajectory: public Trajectory {
         return targetState;
     }
 };
+
+class CSVTrajectory: public Trajectory {
+ private:
+    std::vector<double> waypointTimes;
+    std::vector<Simulator::RTN> waypoints;
+
+ public:
+    CSVTrajectory(const std::string& fileName);
+
+    CSVTrajectory(const CSVTrajectory& old) {
+        this->waypointTimes = old.waypointTimes;
+        this->waypoints = old.waypoints;
+    }
+
+    CSVTrajectory(CSVTrajectory&& other) = default;
+
+    Simulator::RTN getTargetState(double t) override;
+};
+
 
 }
 

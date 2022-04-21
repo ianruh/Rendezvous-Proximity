@@ -22,7 +22,6 @@ class FiniteLQRVehicle: public Simulator::Vehicle {
  public:
 
     FiniteLQRVehicle(
-            double mass,
             Simulator::PV state,
             double targetSMA,
             double timeHorizon);

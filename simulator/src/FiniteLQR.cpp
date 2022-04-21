@@ -11,10 +11,9 @@ namespace odeint = boost::numeric::odeint;
 namespace Controllers {
 
 FiniteLQRVehicle::FiniteLQRVehicle(
-        double mass,
         Simulator::PV state,
         double targetSMA,
-        double timeHorizon): Simulator::Vehicle(mass, state) {
+        double timeHorizon): Simulator::Vehicle(state) {
     // Target SMA needed to construct the linearized A matrix
     this->targetSMA = targetSMA;
     this->timeHorizon = timeHorizon;
@@ -60,8 +59,8 @@ Eigen::Vector3d FiniteLQRVehicle::getControl(
 
     Eigen::Vector3d control = -1 * this->R.inverse() * this->B.transpose() *
         P*state;
-    // This control is acceleration, so f=ma
-    return control*this->mass;
+    // This control is acceleration
+    return control;
 }
 
 using Stepper = odeint::runge_kutta_dopri5<
