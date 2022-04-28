@@ -4,6 +4,7 @@
 #include "InfiniteLQR.h"
 #include "InfiniteLQRLinearTracking.h"
 #include "InfiniteLQRNonLinearTracking.h"
+#include "MPCNonLinearTracking.h"
 #include "TrajectoryGeneration.h"
 #include "Constants.h"
 #include <Eigen/Dense>
@@ -31,9 +32,21 @@ void below200InfiniteLQR(const std::string& fileName) {
     Simulator::PV target0 = Simulator::pvFromCoe(targetCOE);
     Simulator::PV chaser0 = Simulator::pvFromCoe(chaserCOE);
     auto target =  std::make_shared<Simulator::Vehicle>(target0);
+
+    double alpha = 1.0/(100.0*100.0);
+    Eigen::Matrix<double, 6, 6> Q = alpha * Eigen::Matrix<double, 6, 6>::Identity();
+    Q.block(0,0,3,3) = 1.0/(200.0*200.0) * Q.block(0,0,3,3);
+    Q.block(3,3,3,3) = 1.0/(10.0*10.0) * Q.block(3,3,3,3);
+    
+    double beta = 1.0/(0.1*0.1);
+    Eigen::Matrix<double, 3, 3> R = beta * Eigen::Matrix<double, 3, 3>::Identity();
+    R = 1.0/(0.1*0.1) * R;
+
     auto chaser = std::make_shared<Controllers::InfiniteLQRVehicle>(
             chaser0,       // Initial state
-            targetCOE[1]); // Target SMA
+            targetCOE[1],  // Target SMA
+            Q,
+            R);
     Simulator::Simulator sim(
             target,
             chaser,
@@ -48,21 +61,34 @@ void above200InfiniteLQR(const std::string& fileName) {
     Simulator::COE targetCOE;
     targetCOE << 0.0, 8000e3, 0.0, 0.0, 0.0, 0.0;
     Simulator::COE chaserCOE;
-    chaserCOE << 0.0, 8000.2e3, 0.0, 0.0, 0.0, 0.0;
+    chaserCOE << 0.0, 8000e3, 0.0, 0.0, 0.0, 0.0001/0.4;
 
     Simulator::PV target0 = Simulator::pvFromCoe(targetCOE);
     Simulator::PV chaser0 = Simulator::pvFromCoe(chaserCOE);
     auto target =  std::make_shared<Simulator::Vehicle>(target0);
+
+    double alpha = 1.0;
+    Eigen::Matrix<double, 6, 6> Q = alpha * Eigen::Matrix<double, 6, 6>::Identity();
+    Q.block(0,0,3,3) = 1.0/(1.0*1.0) * Q.block(0,0,3,3);
+    Q.block(3,3,3,3) = 1.0/(10.0*10.0) * Q.block(3,3,3,3);
+    
+    double beta = 1.0;
+    Eigen::Matrix<double, 3, 3> R = beta * Eigen::Matrix<double, 3, 3>::Identity();
+    R = 1.0/(0.1*0.1) * R;
+
     auto chaser = std::make_shared<Controllers::InfiniteLQRVehicle>(
             chaser0,       // Initial state
-            targetCOE[1]); // Target SMA
+            targetCOE[1],  // Target SMA
+            Q,
+            R);
     Simulator::Simulator sim(
             target,
             chaser,
             10.0,
-            1.0);
+            1.0,
+            0.1);
 
-    sim.simulate(500, true);
+    sim.simulate(1000, true);
     sim.record.write(fileName);
 }
 
@@ -75,16 +101,28 @@ void above20InfiniteLQR(const std::string& fileName) {
     Simulator::PV target0 = Simulator::pvFromCoe(targetCOE);
     Simulator::PV chaser0 = Simulator::pvFromCoe(chaserCOE);
     auto target =  std::make_shared<Simulator::Vehicle>(target0);
+
+    double alpha = 1.0;
+    Eigen::Matrix<double, 6, 6> Q = alpha * Eigen::Matrix<double, 6, 6>::Identity();
+    Q.block(0,0,3,3) = 1.0/(10.0*10.0) * Q.block(0,0,3,3);
+    Q.block(3,3,3,3) = 1.0/(1.0*1.0) * Q.block(3,3,3,3);
+    
+    double beta = 1.0;
+    Eigen::Matrix<double, 3, 3> R = beta * Eigen::Matrix<double, 3, 3>::Identity();
+    R = 1.0/(0.1*0.1) * R;
+
     auto chaser = std::make_shared<Controllers::InfiniteLQRVehicle>(
             chaser0,       // Initial state
-            targetCOE[1]); // Target SMA
+            targetCOE[1],  // Target SMA
+            Q,
+            R);
     Simulator::Simulator sim(
             target,
             chaser,
             10.0,
             1.0);
 
-    sim.simulate(5000, true);
+    sim.simulate(250, true);
     sim.record.write(fileName);
 }
 
@@ -94,7 +132,7 @@ void leading2000InfiniteLQRLinearTracking(const std::string& fileName) {
     //Simulator::COE chaserCOE;
     //chaserCOE << 0.0, 8000e3, 0.0, 0.0, 0.0, 0.001/4.0;
     Simulator::RTN chaserRTN;
-    chaserRTN << 0.0, 2000.0, 0.0, 0.0, 0.0, 0.0;
+    chaserRTN << 0.0, 2000.0, 0.0, 1.8, 0.0, 0.0;
 
     Simulator::PV target0 = Simulator::pvFromCoe(targetCOE);
     //Simulator::PV chaser0 = Simulator::pvFromCoe(chaserCOE);
@@ -272,5 +310,27 @@ void boxInfiniteLQRNonLinearTracking(
     sim.setTrackedTrajectory(trackedTrajectory);
 
     sim.simulate(boxDuration, true);
+    sim.record.write(fileName);
+}
+
+void mpcStabilize(const std::string& fileName) {
+    Simulator::COE targetCOE;
+    targetCOE << 0.0, 8000e3, 0.0, 0.0, 0.0, 0.0;
+    Simulator::COE chaserCOE;
+    chaserCOE << 0.0, 7999.8e3, 0.0, 0.0, 0.0, 0.0;
+
+    Simulator::PV target0 = Simulator::pvFromCoe(targetCOE);
+    Simulator::PV chaser0 = Simulator::pvFromCoe(chaserCOE);
+    auto target =  std::make_shared<Simulator::Vehicle>(target0);
+    auto chaser = std::make_shared<Controllers::MPCNonLinearTrackingVehicle>(
+            chaser0,       // Initial state
+            targetCOE[1]); // Target SMA
+    Simulator::Simulator sim(
+            target,
+            chaser,
+            10.0,
+            1.0);
+
+    sim.simulate(5000, true);
     sim.record.write(fileName);
 }

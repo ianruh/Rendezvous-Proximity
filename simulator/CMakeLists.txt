@@ -65,8 +65,7 @@ FetchContent_MakeAvailable(googletest)
 
 ##### matplot++ #########
 FetchContent_Declare(matplotplusplus
-        GIT_REPOSITORY https://github.com/alandefreitas/matplotplusplus
-        GIT_TAG v1.1.0)
+        GIT_REPOSITORY https://github.com/alandefreitas/matplotplusplus)
 FetchContent_GetProperties(matplotplusplus)
 if(NOT matplotplusplus_POPULATED)
     FetchContent_Populate(matplotplusplus)
@@ -115,6 +114,8 @@ add_library(simulator
     src/RiccatiSolvers.cpp
     src/TrajectoryGeneration.h
     src/TrajectoryGeneration.cpp
+    src/Visualizations.h
+    src/Visualizations.cpp
     src/external/rapidcsv.h
 )
 target_include_directories(simulator PRIVATE ${CMAKE_BINARY_DIR}/_deps/cppmpc-src PUBLIC src/)

@@ -26,4 +26,7 @@ void box30000InfiniteLQRLinearTracking(const std::string& fileName);
 void box20000InfiniteLQRLinearTracking(const std::string& fileName);
 void box10000InfiniteLQRLinearTracking(const std::string& fileName);
 
+// MPC
+void mpcStabilize(const std::string& fileName);
+
 #endif // SRC_SIMULATION_RUNS_H

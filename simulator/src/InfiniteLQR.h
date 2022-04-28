@@ -11,8 +11,6 @@ class InfiniteLQRVehicle: public Simulator::Vehicle {
     Eigen::Matrix<double, 6, 6> A;
     Eigen::Matrix<double, 6, 3> B;
     Eigen::Matrix<double, 6, 6> Pf;
-    Eigen::Matrix<double, 6, 6> Q;
-    Eigen::Matrix<double, 3, 3> R;
     double targetSMA;
 
     Eigen::Matrix<double, 3, 6> K;
@@ -22,8 +20,8 @@ class InfiniteLQRVehicle: public Simulator::Vehicle {
     InfiniteLQRVehicle(
             Simulator::PV state,
             double targetSMA,
-            double alpha = 1.0/(100.0*100.0),
-            double beta = 1.0/(0.1*0.1));
+            Eigen::Matrix<double, 6, 6> Q,
+            Eigen::Matrix<double, 3, 3> R);
 
     Eigen::Vector3d getControl(
             [[maybe_unused]] double t,

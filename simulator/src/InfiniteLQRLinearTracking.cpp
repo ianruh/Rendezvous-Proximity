@@ -38,10 +38,10 @@ InfiniteLQRLinearTrackingVehicle::InfiniteLQRLinearTrackingVehicle(
          0.0, 0.0, 1.0;
 
     Q = Eigen::Matrix<double, 6, 6>::Identity();
-    Q(0,0) = Q(0,0) * 1.0/(1.0*1.0);
-    Q.block(1,1,2,2) = Q.block(1,1,2,2) * (1.0/(1.0*1.0));
-    Q(3,3) = Q(3,3) * 1.0/(0.01*0.01);
-    Q.block(4,4,2,2) = Q.block(4,4,2,2) * (1.0/(0.01*0.01));
+    Q(0,0) = Q(0,0) * 1.0/(2.0*2.0);
+    Q.block(1,1,2,2) = Q.block(1,1,2,2) * (1.0/(2.0*2.0));
+    Q(3,3) = Q(3,3) * 1.0/(1.0*1.0);
+    Q.block(4,4,2,2) = Q.block(4,4,2,2) * (1.0/(1.0*1.0));
     
     R = 1.0/(0.001*0.001) * Eigen::Matrix<double, 3, 3>::Identity();
 

@@ -93,7 +93,7 @@ class Simulator {
     Simulator(std::shared_ptr<Vehicle> target,
             std::shared_ptr<Vehicle> chaser,
             double controlFrequency = 10.0,
-            double recordTimeStep = 100.0,
+            double recordTimeStep = 1.0,
             double controlSaturation = 0.01);
 
     void setTrackedTrajectory(std::shared_ptr<Controllers::Trajectory> trackedTrajectory) {

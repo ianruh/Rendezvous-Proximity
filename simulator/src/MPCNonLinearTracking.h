@@ -1,5 +1,5 @@
-#ifndef SRC_INFINITE_LQR_LINEAR_TRACKING_H_
-#define SRC_INFINITE_LQR_LINEAR_TRACKING_H_
+#ifndef SRC_MPC_NON_LINEAR_TRACKING_H_
+#define SRC_MPC_NON_LINEAR_TRACKING_H_
 #include "OrbitalState.h"
 #include "Simulator.h"
 #include "TrajectoryGeneration.h"
@@ -12,16 +12,7 @@ namespace Controllers {
 
 class MPCNonLinearTrackingVehicle: public Simulator::Vehicle {
  private:
-    Eigen::Matrix<double, 6, 6> A;
-    Eigen::Matrix<double, 6, 3> B;
-    Eigen::Matrix<double, 6, 6> Pf;
-    Eigen::Matrix<double, 6, 6> Q;
-    Eigen::Matrix<double, 3, 3> R;
     double targetSMA;
-
-    Eigen::Matrix<double, 3, 6> K;
-
-    std::shared_ptr<Trajectory> targetTrajectory;
 
     // The objective function
     cppmpc::FastMPC::SymbolicObjective objective;
@@ -31,8 +22,8 @@ class MPCNonLinearTrackingVehicle: public Simulator::Vehicle {
     MPCNonLinearTrackingVehicle(
             Simulator::PV state,
             double targetSMA,
-            std::shared_ptr<Trajectory> targetTrajectory,
             size_t numSteps = 20,
+            double maxAccel = 0.01,
             double timeStep = 100.0);
 
     Eigen::Vector3d getControl(
@@ -43,4 +34,5 @@ class MPCNonLinearTrackingVehicle: public Simulator::Vehicle {
 
 } // namespace Controllers
 
-#endif // SRC_INFINITE_LQR_LINEAR_TRACKING_H_
+#endif // SRC_MPC_NON_LINEAR_TRACKING_H_
+

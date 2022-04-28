@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include "SimulationRuns.h"
 #include "Simulator.h"
+#include "Visualizations.h"
 #include <map>
 #include <functional>
 #include <matplot/matplot.h>
@@ -18,7 +19,8 @@ std::map<std::string, std::function<void(const std::string&)>> simulationRuns {
     {"boxGeoInfiniteLQRLinearTracking", boxGeoInfiniteLQRLinearTracking},
     {"box30000InfiniteLQRLinearTracking", box30000InfiniteLQRLinearTracking},
     {"box20000InfiniteLQRLinearTracking", box20000InfiniteLQRLinearTracking},
-    {"box10000InfiniteLQRLinearTracking", box10000InfiniteLQRLinearTracking}
+    {"box10000InfiniteLQRLinearTracking", box10000InfiniteLQRLinearTracking},
+    {"mpcStabilize", mpcStabilize}
 };
 
 void simulate(const std::string& simulatioName, const std::string& outputName) {
@@ -37,36 +39,9 @@ void visualize(const std::string& recordName, const std::string& outputName) {
 
     Simulator::Record record = Simulator::Record::load(recordName);
 
-    auto fig = matplot::figure(true);
-    fig->size(1920*2,1080*2);
-    // Trajectory in RTN
-    matplot::subplot(6,3,{0, 3, 6});
-    record.plotChaserRTN(fig->current_axes());
-    // Trajectory in ECI
-    matplot::subplot(6,3,{1, 4, 7});
-    record.plotECI(fig->current_axes());
-    // Control over time
-    matplot::subplot(6,3,{9, 12, 15});
-    record.plotChaserControlOverTime(fig->current_axes());
-    // Distance over time
-    matplot::subplot(6,3,{10,13,16});
-    record.plotDistanceOverTime(fig->current_axes());
-    
-    //==== Individual states over time ==== 
-    matplot::subplot(6,3,2);
-    record.plotChaserRTNState2D(fig->current_axes(), 0);
-    matplot::subplot(6,3,5);
-    record.plotChaserRTNState2D(fig->current_axes(), 1);
-    matplot::subplot(6,3,8);
-    record.plotChaserRTNState2D(fig->current_axes(), 2);
-    matplot::subplot(6,3,11);
-    record.plotChaserRTNState2D(fig->current_axes(), 3);
-    matplot::subplot(6,3,14);
-    record.plotChaserRTNState2D(fig->current_axes(), 4);
-    matplot::subplot(6,3,17);
-    record.plotChaserRTNState2D(fig->current_axes(), 5);
-
-    fig->save(outputName + ".jpg");
+    allInOneVisual(record, outputName + ".jpg");
+    trajectoryStateControl(record, outputName + "-trajStateControl.jpg");
+    trajectoryStateControl(record, outputName + "-trajStateControl.svg");
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
