@@ -32,11 +32,13 @@ MPCNonLinearTrackingVehicle::MPCNonLinearTrackingVehicle(
         double targetSMA,
         size_t numSteps,
         double maxAccel,
-        double timeStep): Simulator::Vehicle(state) {
+        double timeStep,
+        double finalStateWeight,
+        double controlWeight): Simulator::Vehicle(state) {
     // Target SMA needed to construct the linearized A matrix
     this->targetSMA = targetSMA;
     //double n = std::sqrt(MU_EARTH/std::pow(this->targetSMA, 3));
-    double maxPos = 600.0;
+    double maxPos = 2000.0;
 
     // Just a constant
     auto n = SymEngine::Expression(SymEngine::real_double(std::sqrt(MU_EARTH/std::pow(this->targetSMA, 3))));
@@ -56,17 +58,16 @@ MPCNonLinearTrackingVehicle::MPCNonLinearTrackingVehicle(
     std::vector<SymEngine::Expression> dz = cppmpc::toExpressions(cppmpc::variableVector("dz", numSteps));
 
     //===== Variable Ordering =====
-    cppmpc::OrderedSet variableOrdering;
     for(size_t i = 0; i < numSteps; i++) {
-        variableOrdering.append(x[i]);
-        variableOrdering.append(y[i]);
-        variableOrdering.append(z[i]);
-        variableOrdering.append(vx[i]);
-        variableOrdering.append(vy[i]);
-        variableOrdering.append(vz[i]);
-        variableOrdering.append(dx[i]);
-        variableOrdering.append(dy[i]);
-        variableOrdering.append(dz[i]);
+        this->variableOrdering.append(x[i]);
+        this->variableOrdering.append(y[i]);
+        this->variableOrdering.append(z[i]);
+        this->variableOrdering.append(vx[i]);
+        this->variableOrdering.append(vy[i]);
+        this->variableOrdering.append(vz[i]);
+        this->variableOrdering.append(dx[i]);
+        this->variableOrdering.append(dy[i]);
+        this->variableOrdering.append(dz[i]);
     }
 
     //===== Parameters =====
@@ -80,7 +81,6 @@ MPCNonLinearTrackingVehicle::MPCNonLinearTrackingVehicle(
     //std::vector<SymEngine::Expression> previousVz = cppmpc::toExpressions(cppmpc::variableVector("vz_prev", numSteps));
 
     //====== Parameter Ordering ======
-    cppmpc::OrderedSet parameterOrdering;
     for(size_t i = 0; i < 6; i++) {
         parameterOrdering.append(initialState[i]);
     }
@@ -102,6 +102,13 @@ MPCNonLinearTrackingVehicle::MPCNonLinearTrackingVehicle(
     objective.equalityConstraints.appendConstraint(vx[0], initialState[3]);
     objective.equalityConstraints.appendConstraint(vy[0], initialState[4]);
     objective.equalityConstraints.appendConstraint(vz[0], initialState[5]);
+
+    //objective.equalityConstraints.appendConstraint(x[numSteps-1], 0.0);
+    //objective.equalityConstraints.appendConstraint(y[numSteps-1], 0.0);
+    //objective.equalityConstraints.appendConstraint(z[numSteps-1], 0.0);
+    //objective.equalityConstraints.appendConstraint(vx[numSteps-1], 0.0);
+    //objective.equalityConstraints.appendConstraint(vy[numSteps-1], 0.0);
+    //objective.equalityConstraints.appendConstraint(vz[numSteps-1], 0.0);
 
     // Set the maximum position and maximum force.
     for(size_t i = 0; i < numSteps; i++) {
@@ -143,28 +150,45 @@ MPCNonLinearTrackingVehicle::MPCNonLinearTrackingVehicle(
     }
 
     // Construct the objective
-    auto obj = x[numSteps-1]*x[numSteps-1] +
+    auto obj = finalStateWeight*(x[numSteps-1]*x[numSteps-1] +
         y[numSteps-1]*y[numSteps-1] +
         z[numSteps-1]*z[numSteps-1] +
-        vx[numSteps-1]*vx[numSteps-1] +
-        vy[numSteps-1]*vy[numSteps-1] +
-        vz[numSteps-1]*vz[numSteps-1];
+        100*vx[numSteps-1]*vx[numSteps-1] +
+        100*vy[numSteps-1]*vy[numSteps-1] +
+        100*vz[numSteps-1]*vz[numSteps-1]);
+    //auto obj = SymEngine::Expression(SymEngine::real_double(0.0));
     for(size_t i = 0; i < numSteps; i++) {
-        obj = obj + dx[i]*dx[i] + dy[i]*dy[i] + dz[i]*dz[i];
+        obj = obj + controlWeight*(dx[i]*dx[i] + dy[i]*dy[i] + dz[i]*dz[i]);
     }
     objective.setObjective(obj);
 
+    Simulator::Vector6d initialParamValues = Simulator::Vector6d::Zero();
+    objective.setParameters(initialParamValues);
+
     objective.finalize(variableOrdering, parameterOrdering);
+
+    this->solver = std::make_unique<cppmpc::FastMPC::Solver>(objective);
+    this->solver->hyperParameters.newtonStepsStageMaximum = 10;
 }
 
 Eigen::Vector3d MPCNonLinearTrackingVehicle::getControl(
         [[maybe_unused]] double t,
         [[maybe_unused]] const Simulator::Vehicle& target) {
     // Construct the control
-    //Simulator::Vector6d state = this->getRtn(target.getPv());
-    Eigen::Vector3d control = Eigen::Vector3d::Zero();
+    Simulator::Vector6d state = this->getRtn(target.getPv());
 
-    // This control is acceleration, so f=ma
+    // Parameters are just the initial state
+    this->objective.setParameters(state);
+
+    auto [minimum, primal, dual] = this->solver->minimize(
+            this->previousPrimal, this->previousDual);
+
+    this->previousPrimal = primal;
+    this->previousDual = dual;
+
+    Eigen::Vector3d control;
+    control << primal(6), primal(7), primal(8);
+
     return control;
 }
 

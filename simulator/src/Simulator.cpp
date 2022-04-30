@@ -412,7 +412,7 @@ void Simulator::simulate(double duration,
             double hours = minutes / 60.0;
             std::cout << "Sim Time: " << this->time << " s (" << minutes <<
                 " min)(" << hours << " hrs)                            /" << 
-                duration << " s\n";
+                duration << " s\r";
         }
 
         // Record Data
@@ -430,6 +430,9 @@ void Simulator::simulate(double duration,
         // Do the next timestep, no need to incrment this->time, as 
         // integrate does it for us.
         this->integrate(dt);
+    }
+    if(!quiet) {
+        std::cout << "\n";
     }
 }
 

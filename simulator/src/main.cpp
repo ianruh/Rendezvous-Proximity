@@ -12,7 +12,7 @@ using namespace std::string_literals;
 
 std::map<std::string, std::function<void(const std::string&)>> simulationRuns {
     {"below200InfiniteLQR", below200InfiniteLQR},
-    {"above200InfiniteLQR", above200InfiniteLQR},
+    {"leading2000InfiniteLQR", leading2000InfiniteLQR},
     {"above20InfiniteLQR", above20InfiniteLQR},
     {"leading2000InfiniteLQRLinearTracking", leading2000InfiniteLQRLinearTracking},
     {"leading2000InfiniteLQRNonLinearTracking", leading2000InfiniteLQRNonLinearTracking},

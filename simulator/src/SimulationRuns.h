@@ -4,7 +4,7 @@
 
 // Linearized stablizing LQR
 void below200InfiniteLQR(const std::string& fileName);
-void above200InfiniteLQR(const std::string& fileName);
+void leading2000InfiniteLQR(const std::string& fileName);
 void above20InfiniteLQR(const std::string& fileName);
 
 // Trajectory Tracking

@@ -57,7 +57,7 @@ void below200InfiniteLQR(const std::string& fileName) {
     sim.record.write(fileName);
 }
 
-void above200InfiniteLQR(const std::string& fileName) {
+void leading2000InfiniteLQR(const std::string& fileName) {
     Simulator::COE targetCOE;
     targetCOE << 0.0, 8000e3, 0.0, 0.0, 0.0, 0.0;
     Simulator::COE chaserCOE;
@@ -69,8 +69,8 @@ void above200InfiniteLQR(const std::string& fileName) {
 
     double alpha = 1.0;
     Eigen::Matrix<double, 6, 6> Q = alpha * Eigen::Matrix<double, 6, 6>::Identity();
-    Q.block(0,0,3,3) = 1.0/(1.0*1.0) * Q.block(0,0,3,3);
-    Q.block(3,3,3,3) = 1.0/(10.0*10.0) * Q.block(3,3,3,3);
+    Q.block(0,0,3,3) = 1.0/(30.0*30.0) * Q.block(0,0,3,3);
+    Q.block(3,3,3,3) = 1.0/(0.5*0.5) * Q.block(3,3,3,3);
     
     double beta = 1.0;
     Eigen::Matrix<double, 3, 3> R = beta * Eigen::Matrix<double, 3, 3>::Identity();
@@ -317,7 +317,7 @@ void mpcStabilize(const std::string& fileName) {
     Simulator::COE targetCOE;
     targetCOE << 0.0, 8000e3, 0.0, 0.0, 0.0, 0.0;
     Simulator::COE chaserCOE;
-    chaserCOE << 0.0, 7999.8e3, 0.0, 0.0, 0.0, 0.0;
+    chaserCOE << 0.0, 8000.000e3, 0.0, 0.0, 0.0, 0.0001/4.0;
 
     Simulator::PV target0 = Simulator::pvFromCoe(targetCOE);
     Simulator::PV chaser0 = Simulator::pvFromCoe(chaserCOE);
@@ -328,9 +328,9 @@ void mpcStabilize(const std::string& fileName) {
     Simulator::Simulator sim(
             target,
             chaser,
-            10.0,
+            0.05,
             1.0);
 
-    sim.simulate(5000, true);
+    sim.simulate(2000, false);
     sim.record.write(fileName);
 }
