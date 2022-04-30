@@ -1,6 +1,7 @@
 \documentclass[conference]{IEEEtran}
 
 \usepackage{cite}
+\usepackage{hyperref}
 \usepackage{amsmath,amssymb,amsfonts}
 %\usepackage{algpseudocode}
 \usepackage{graphicx}
@@ -251,7 +252,9 @@ in our knowledge can be quite significant.
 \section{Simulation}
 
 In order to test the controllers implemented, we created a simulation environment
-and several test scenarios to evaluate their performance.
+and several test scenarios to evaluate their performance \cite{rpo_repo}. The
+source code is available at
+\url{https://github.com/ianruh/Rendezvous-Proximity}.
 
 We wrote a restricted two body simulator to propagate the target and chaser
 in the ECI frame around Earth. All nonidealities of the orbits, including
@@ -268,8 +271,6 @@ thrusters on a relatively small satellite.
 The controllers for tracking trajectories were provided a target state at each
 control time step, where the target state was generated analytically or read
 (and interpolated) from a CSV file depending on the scenario.
-
-\todo{refence to GitHub repo}
 
 %==============================================================================
 %==============================================================================
@@ -321,8 +322,10 @@ Where ${\bf A}$ and ${\bf B}$ are defined as
 \end{equation}
 
 and ${\bf Q} = I_{6\times 6}$, ${\bf R} = I_{3\times 3}$. This controller 
-stabilizes the chaser in the vicinity of the target. We tested the stabilizing
-controller in several scarnios starting it in the vicinity of the target.
+stabilizes the chaser in the vicinity of the target. Two scenarios are shown in 
+figures \ref{fig:above20} and \ref{fig:leading2000}.
+
+\todo{Q and R weight matrices}
 
 \begin{figure}[t]
     \centerline{\includegraphics[width=\linewidth]{./figures/simulation_outputs/above20InfiniteLQR-trajStateControl.jpg}}
@@ -340,25 +343,20 @@ The linear infinite LQR control is able to stabilize the chaser around the
 target, though the size of this region of stability appears to be significantly
 dependent on the weight matrices Q and R chosen.
 
-For the simulations shown in figures \ref{fig:leading2000} and
-\ref{fig:above20} the weight matrices were chosen to be:
-
-\todo{Q and R weight matrices}
-
 These weights were selected by trial and error, but the starting point was
 chosen based on the heuristic of weighting $\frac{1}{(\text{error bound})^2}$.
 
-Asside from showing that our dynamics and basic approach work, these
-controllers would have little practical use for rendezvous and docking, where
-safety constraints on the spacecraft position are very important. Therefore, we
-also implemented and tested two trajectory tracking controllers, as discussed
-in the next section.
+Aside from showing that our dynamics and basic approach work, these controllers
+would have little practical use for rendezvous and docking, where safety
+constraints on the spacecraft state (both position and velocity) are very
+important. Therefore, we also implemented and tested two trajectory tracking
+controllers, as discussed in the next section.
 
 %==============================================================================
 
-\subsection{Infinte LQR Linear Trajectory Tracking Controller}
+\subsection{Infinte LQR Time Invariant Trajectory Tracking Controller}
 
-We also implemented an LQR trajectory tracking controller based on the error
+We implemented an LQR trajectory tracking controller based on the error
 dynamics of the linearized system in (\ref{eq:linear-dynamics}). 
 We define the state error $e(t) = x(t) - x_d(t)$, where $x_d$ is our desired
 trajectory, and the control error $v(t) = u(t) - u_d(t)$, where $u_d$ is our
@@ -384,12 +382,14 @@ Being provided a trajectory to track, one which can be gaurenteed not to
 violate any safety constraints, is a more realistic scenario than just an LQR
 controller attempting to stabilize the system at the origin.
 
-We tested the trajectory tracking controllers on several 'box' trajectories are
+We tested the trajectory tracking controllers on several 'box' trajectories at
 varying orbital radi from Geo Synchronous (~42,000 km) to LEO (~8,000 km).
 
 As the orbit got smaller, the disturbing acceleration required to cancel out
 the dyanmics of the system begins to saturate the inputs, causing a loss of
-control.
+control. This behavior is expected, as the 'box' trajectories ignore the
+natural dynamics of the system, which become more significant the smaller the
+orbit gets.
 
 \begin{figure}[t]
     \centerline{\includegraphics[width=\linewidth]{./figures/simulation_outputs/boxGeoInfiniteLQRLinearTracking-trajStateControl.jpg}}
@@ -450,12 +450,44 @@ where
 \end{equation}
 
 Rather than performing the deirvation by hand, we used the symbolic mathematics
-library SymEngine \todo{ref SymEngine} to derive the symbolic matrices for
+library SymEngine \cite{symengine_repo} to derive the symbolic matrices for
 ${\bf A}(t)$ and ${\bf B}(t)$. From the symbolic matrices, we performed code
 generation at runtime to create a function for each symbolic matrix that, given
 a vector of the desired state and control, returned ${\bf A}$ and ${\bf B}$.
 The generated code was compiled to a shared object and then loaded into memory
 and the function pointers retrieved.
+
+%==============================================================================
+
+\subsection{MPC Controller}
+
+We implemnted a discrete time MPC controller based off of Hill-Clohessy-Wiltshire equations
+(\ref{eq:linear-dynamics}), which constrained the maximum control, velocity,
+and state. The MPC controller was implented using \cite{cppmpc_repo}, and formulated
+as:
+
+\todo{This}
+\begin{equation}
+    \label{eq:mpc}
+    \begin{split}
+        \min_{x, u} \ \ \  & \frac{1}{2} \int_{t_0}^{\inf} \left( x(t)^T {\bf Q}
+            x(t) + u(t)^T {\bf R} u(t) \right)dt \\
+        \text{s.t.   } & \dot{x} = {\bf{A}}x + {\bf B}u \\
+                     & x(t_0) = x_0
+    \end{split}
+\end{equation}
+
+As this was not formulated as a tracking controller (though it could be easily
+adapted to one by parameterizing goal state in the objective for every
+timestep), we tested this controller on just bringing the chaser to the target
+when started within the vicinity of the target.
+
+\begin{figure}[t]
+    \centerline{\includegraphics[width=\linewidth]{./figures/simulation_outputs/mpcStabilize-trajStateControl.jpg}}
+    \caption{MPC controller bringing the chaser to the target when starting
+    200M away.}
+    \label{fig:mpc}
+\end{figure}
 
 %==============================================================================
 %==============================================================================
@@ -464,7 +496,7 @@ and the function pointers retrieved.
 \section{Extensions}
 
 There are many extensions and variations on the system and the controllers that
-could be taken. Of signifcant interest to myself, is extending the LTV
+could be explored. Of interest to myself is extending the LTV
 controller to the noncircular case, where the first and second time derivatives
 of the true anomally come into the system. This would enable the controllers to
 function in a larger vicinity of the target, as well in elliptical orbits.
@@ -475,6 +507,10 @@ particular interest, would be rendezvous and proximity operations in Near
 Rectilinear Halo Orbits about the Moon (these are extremely elliptical lunar
 orbits that verge on being closer to L2 halo orbits than lunar orbits) where
 the planned NASA Gateway manned space station will be.
+
+The assumptions made about the configuration and actuators could also be
+removed, specifically the arrangement of thrusters and it's impact the
+efficiency of maneuvers would be interesting.
 
 \bibliography{mybibfile}
 \bibliographystyle{plain}

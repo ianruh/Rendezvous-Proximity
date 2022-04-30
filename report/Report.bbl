@@ -1,7 +1,20 @@
 \begin{thebibliography}{1}
 
+\bibitem{cppmpc_repo}
+Cppmpc github repo.
+\newblock \url{https://github.com/ianruh/cppmpc}.
+
 \bibitem{eci_frame}
 Earth-cetered inertial frame.
+\newblock \url{https://en.wikipedia.org/wiki/Earth-centered_inertial}.
+
+\bibitem{rpo_repo}
+Rendezvous-proximity github repo.
+\newblock \url{https://github.com/ianruh/Rendezvous-Proximity}.
+
+\bibitem{symengine_repo}
+Symengine.
+\newblock \url{https://github.com/symengine/symengine}.
 
 \bibitem{cli_clohessy_nodate}
 Eugene~M Cliﬀ.

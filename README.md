@@ -40,3 +40,5 @@ $ ./utils build
   mathematics
 - [Eigen3](https://eigen.tuxfamily.org/index.php?title=Main_Page) for linear
   algebra and basic vector/matrix types.
+- [Matplot++](https://github.com/alandefreitas/matplotplusplus) for plotting
+  and visualization.
