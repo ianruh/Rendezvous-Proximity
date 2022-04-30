@@ -4,6 +4,13 @@ This respository contains the code for the restricted two-body simulator and
 controllers that were implemented for the final project of my ME 601 Autonomous
 Feedback course.
 
+The final report can be seen [here](https://github.com/ianruh/Rendezvous-Proximity/blob/master/report/Report.pdf)
+
+![Example Simulation](./simulator/outputs/box30000InfiniteLQRLinearTracking-trajStateControl.jpg)
+
+*This simulation tracked a box trajectory around the target in a circular orbit
+at and SMA of approx 30,000 km*
+
 ## Structure
 
 The `proposal/` and `report/` directories contain the documents that were
