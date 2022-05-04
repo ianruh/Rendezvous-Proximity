@@ -16,7 +16,7 @@ void boxInfiniteLQRLinearTracking(
         const std::string& fileName,
         double sma,
         double boxDuration);
-void boxInfiniteLQRNonLinearTracking(
+void boxVaryingInfiniteLQRLinearTracking(
         const std::string& fileName,
         double sma,
         double boxDuration);
@@ -25,6 +25,11 @@ void boxGeoInfiniteLQRLinearTracking(const std::string& fileName);
 void box30000InfiniteLQRLinearTracking(const std::string& fileName);
 void box20000InfiniteLQRLinearTracking(const std::string& fileName);
 void box10000InfiniteLQRLinearTracking(const std::string& fileName);
+
+void boxGeoVaryingInfiniteLQRLinearTracking(const std::string& fileName);
+void box30000VaryingInfiniteLQRLinearTracking(const std::string& fileName);
+void box20000VaryingInfiniteLQRLinearTracking(const std::string& fileName);
+void box10000VaryingInfiniteLQRLinearTracking(const std::string& fileName);
 
 // MPC
 void mpcStabilize(const std::string& fileName);

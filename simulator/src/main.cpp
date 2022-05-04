@@ -20,6 +20,10 @@ std::map<std::string, std::function<void(const std::string&)>> simulationRuns {
     {"box30000InfiniteLQRLinearTracking", box30000InfiniteLQRLinearTracking},
     {"box20000InfiniteLQRLinearTracking", box20000InfiniteLQRLinearTracking},
     {"box10000InfiniteLQRLinearTracking", box10000InfiniteLQRLinearTracking},
+    {"boxGeoVaryingInfiniteLQRLinearTracking", boxGeoVaryingInfiniteLQRLinearTracking},
+    {"box30000VaryingInfiniteLQRLinearTracking", box30000VaryingInfiniteLQRLinearTracking},
+    {"box20000VaryingInfiniteLQRLinearTracking", box20000VaryingInfiniteLQRLinearTracking},
+    {"box10000VaryingInfiniteLQRLinearTracking", box10000VaryingInfiniteLQRLinearTracking},
     {"mpcStabilize", mpcStabilize}
 };
 

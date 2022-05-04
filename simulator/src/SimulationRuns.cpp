@@ -23,6 +23,19 @@ void box10000InfiniteLQRLinearTracking(const std::string& fileName) {
     boxInfiniteLQRLinearTracking(fileName, 10000e3, 8000);
 }
 
+void boxGeoVaryingInfiniteLQRLinearTracking(const std::string& fileName) {
+    boxVaryingInfiniteLQRLinearTracking(fileName, 42164e3, 8000);
+}
+void box30000VaryingInfiniteLQRLinearTracking(const std::string& fileName) {
+    boxVaryingInfiniteLQRLinearTracking(fileName, 30000e3, 8000);
+}
+void box20000VaryingInfiniteLQRLinearTracking(const std::string& fileName) {
+    boxVaryingInfiniteLQRLinearTracking(fileName, 20001e3, 8000);
+}
+void box10000VaryingInfiniteLQRLinearTracking(const std::string& fileName) {
+    boxVaryingInfiniteLQRLinearTracking(fileName, 10000e3, 8000);
+}
+
 void below200InfiniteLQR(const std::string& fileName) {
     Simulator::COE targetCOE;
     targetCOE << 0.0, 8000e3, 0.0, 0.0, 0.0, 0.0;
@@ -251,7 +264,7 @@ void boxInfiniteLQRLinearTracking(
 }
 
 
-void boxInfiniteLQRNonLinearTracking(
+void boxVaryingInfiniteLQRLinearTracking(
         const std::string& fileName,
         double sma,
         double boxDuration) {
