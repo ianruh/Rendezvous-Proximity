@@ -14,8 +14,9 @@ namespace Controllers {
 InfiniteLQRLinearTrackingVehicle::InfiniteLQRLinearTrackingVehicle(
         Simulator::PV state,
         double targetSMA,
-        std::shared_ptr<Trajectory> targetTrajectory
-        ): Simulator::Vehicle(state) {
+        std::shared_ptr<Trajectory> targetTrajectory,
+        Eigen::Matrix<double, 6, 6>  Q,
+        Eigen::Matrix<double, 3, 3> R): Simulator::Vehicle(state) {
     // Target SMA needed to construct the linearized A matrix
     this->targetSMA = targetSMA;
     this->targetTrajectory = targetTrajectory;
@@ -37,13 +38,8 @@ InfiniteLQRLinearTrackingVehicle::InfiniteLQRLinearTrackingVehicle(
          0.0, 1.0, 0.0,
          0.0, 0.0, 1.0;
 
-    Q = Eigen::Matrix<double, 6, 6>::Identity();
-    Q(0,0) = Q(0,0) * 1.0/(2.0*2.0);
-    Q.block(1,1,2,2) = Q.block(1,1,2,2) * (1.0/(2.0*2.0));
-    Q(3,3) = Q(3,3) * 1.0/(1.0*1.0);
-    Q.block(4,4,2,2) = Q.block(4,4,2,2) * (1.0/(1.0*1.0));
-    
-    R = 1.0/(0.001*0.001) * Eigen::Matrix<double, 3, 3>::Identity();
+    this->Q = Q;
+    this->R = R;
 
     auto P = solveRiccatiEigen(A, B, Q, R);
     if(!P) {
@@ -51,8 +47,6 @@ InfiniteLQRLinearTrackingVehicle::InfiniteLQRLinearTrackingVehicle(
     }
 
     this->K = this->R.inverse() * this->B.transpose() * P.value();
-
-    std::cout << (A - B*K).eigenvalues() << "\n";
 }
 
 Eigen::Vector3d InfiniteLQRLinearTrackingVehicle::getControl(

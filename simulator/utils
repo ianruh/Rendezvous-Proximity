@@ -72,10 +72,17 @@ sub_clean() {
 }
 
 sub_run-box() {
+    # Time invariant
     sub_run box10000InfiniteLQRLinearTracking
     sub_run box20000InfiniteLQRLinearTracking
     sub_run box30000InfiniteLQRLinearTracking
     sub_run boxGeoInfiniteLQRLinearTracking
+
+    # Time varying
+    sub_run box10000VaryingInfiniteLQRLinearTracking
+    sub_run box20000VaryingInfiniteLQRLinearTracking
+    sub_run box30000VaryingInfiniteLQRLinearTracking
+    sub_run boxGeoVaryingInfiniteLQRLinearTracking
 }
 
 sub_run() {

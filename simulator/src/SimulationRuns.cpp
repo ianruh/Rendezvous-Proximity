@@ -154,10 +154,20 @@ void leading2000InfiniteLQRLinearTracking(const std::string& fileName) {
 
     auto trackedTrajectory = std::make_shared<Controllers::CSVTrajectory>("../trajectories/2000mLeadingRendezvous.csv");
 
+    Eigen::Matrix<double, 6, 6> Q = Eigen::Matrix<double, 6, 6>::Identity();
+    Q(0,0) = Q(0,0) * 1.0/(2.0*2.0);
+    Q.block(1,1,2,2) = Q.block(1,1,2,2) * (1.0/(2.0*2.0));
+    Q(3,3) = Q(3,3) * 1.0/(1.0*1.0);
+    Q.block(4,4,2,2) = Q.block(4,4,2,2) * (1.0/(1.0*1.0));
+    
+    Eigen::Matrix<double, 3, 3> R = 1.0/(0.001*0.001) * Eigen::Matrix<double, 3, 3>::Identity();
+
     auto chaser = std::make_shared<Controllers::InfiniteLQRLinearTrackingVehicle>(
             chaser0,       // Initial state
             targetCOE[1], // Target SMA
-            trackedTrajectory);
+            trackedTrajectory,
+            Q,
+            R);
 
     Simulator::Simulator sim(
             target,
@@ -184,11 +194,21 @@ void leading2000InfiniteLQRNonLinearTracking(const std::string& fileName) {
     auto target =  std::make_shared<Simulator::Vehicle>(target0);
 
     auto trackedTrajectory = std::make_shared<Controllers::CSVTrajectory>("../trajectories/2000mLeadingRendezvous.csv");
+    
+    Eigen::Matrix<double, 6, 6> Q = Eigen::Matrix<double, 6, 6>::Identity();
+    Q(0,0) = Q(0,0) * 1.0/(1.0*1.0);
+    Q.block(1,1,2,2) = Q.block(1,1,2,2) * (1.0/(1.0*1.0));
+    Q(3,3) = Q(3,3) * 1.0/(0.01*0.01);
+    Q.block(4,4,2,2) = Q.block(4,4,2,2) * (1.0/(0.01*0.01));
+    
+    Eigen::Matrix<double, 3, 3> R = 1.0/(1*1) * Eigen::Matrix<double, 3, 3>::Identity();
 
     auto chaser = std::make_shared<Controllers::InfiniteLQRNonLinearTrackingVehicle>(
             chaser0,       // Initial state
             targetCOE(1), // Target SMA
-            trackedTrajectory);
+            trackedTrajectory,
+            Q,
+            R);
 
     Simulator::Simulator sim(
             target,
@@ -247,11 +267,21 @@ void boxInfiniteLQRLinearTracking(
     chaserRTN0 << 0, 200, 0, 0, 0, 0;
     Simulator::PV chaser0 = Simulator::pvFromRtn(chaserRTN0, target0);
 
+    Eigen::Matrix<double, 6, 6> Q = Eigen::Matrix<double, 6, 6>::Identity();
+    Q(0,0) = Q(0,0) * 1.0/(2.0*2.0);
+    Q.block(1,1,2,2) = Q.block(1,1,2,2) * (1.0/(2.0*2.0));
+    Q(3,3) = Q(3,3) * 1.0/(1.0*1.0);
+    Q.block(4,4,2,2) = Q.block(4,4,2,2) * (1.0/(1.0*1.0));
+    
+    Eigen::Matrix<double, 3, 3> R = 1.0/(0.001*0.001) * Eigen::Matrix<double, 3, 3>::Identity();
+
     auto target = std::make_shared<Simulator::Vehicle>(target0);
     auto chaser = std::make_shared<Controllers::InfiniteLQRLinearTrackingVehicle>(
             chaser0,       // Initial state
             targetCOE[1],
-            trackedTrajectory);
+            trackedTrajectory,
+            Q,
+            R);
     Simulator::Simulator sim(
             target,
             chaser,
@@ -310,11 +340,21 @@ void boxVaryingInfiniteLQRLinearTracking(
     chaserRTN0 << 0, 200, 0, 0, 0, 0;
     Simulator::PV chaser0 = Simulator::pvFromRtn(chaserRTN0, target0);
 
+    Eigen::Matrix<double, 6, 6> Q = Eigen::Matrix<double, 6, 6>::Identity();
+    Q(0,0) = Q(0,0) * 1.0/(2.0*2.0);
+    Q.block(1,1,2,2) = Q.block(1,1,2,2) * (1.0/(2.0*2.0));
+    Q(3,3) = Q(3,3) * 1.0/(1.0*1.0);
+    Q.block(4,4,2,2) = Q.block(4,4,2,2) * (1.0/(1.0*1.0));
+    
+    Eigen::Matrix<double, 3, 3> R = 1.0/(0.001*0.001) * Eigen::Matrix<double, 3, 3>::Identity();
+
     auto target =  std::make_shared<Simulator::Vehicle>(target0);
     auto chaser = std::make_shared<Controllers::InfiniteLQRNonLinearTrackingVehicle>(
             chaser0,       // Initial state
             targetCOE[1],
-            trackedTrajectory);
+            trackedTrajectory,
+            Q,
+            R);
     Simulator::Simulator sim(
             target,
             chaser,

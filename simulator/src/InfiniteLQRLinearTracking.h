@@ -26,7 +26,9 @@ class InfiniteLQRLinearTrackingVehicle: public Simulator::Vehicle {
     InfiniteLQRLinearTrackingVehicle(
             Simulator::PV state,
             double targetSMA,
-            std::shared_ptr<Trajectory> targetTrajectory);
+            std::shared_ptr<Trajectory> targetTrajectory,
+            Eigen::Matrix<double, 6, 6> Q,
+            Eigen::Matrix<double, 3, 3> R);
 
     Eigen::Vector3d getControl(
             [[maybe_unused]] double t,
