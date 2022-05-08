@@ -15,7 +15,7 @@
 \newcommand\mat[1]{\begin{bmatrix}#1\end{bmatrix}}
 
 \title{Rendezvous \& Proximity Operations \\
-{\footnotesize ME 601 (Autonomous Feedack) Final Project}
+{\footnotesize ME 601 (Autonomous Feedback) Final Project}
 }
 
 \author{\IEEEauthorblockA{Ian Ruh}
@@ -47,32 +47,32 @@
 
 \begin{abstract}
 
-Using the material covered in class, this project analyzes the control
-and relative dynamics of two spacecraft in orbit around earth by designing,
-implementing, and testing several linear-quadratic-regulator (LQR) and
-\todo{model predictive control (MPC)} controllers. This is a
-subject of interest due to its current usage in vehicle docking to space
-stations, as well as its future applications to in-orbit debris collection,
-in-orbit assembly, and in-orbit refueling.
+Using the material covered in class, this project analyzes the control and
+relative dynamics of two spacecraft in orbit around Earth by designing,
+implementing, and testing several linear-quadratic-regulator (LQR) and model
+predictive control (MPC) controllers. This is a subject of interest due to its
+current usage in vehicle docking to space stations, as well as its future
+applications to in-orbit debris collection, in-orbit assembly, and in-orbit
+refueling.
 
-We designed and implented three infinite LQR feedback controllers: an infinite LQR
-controller using the linearized system dynamics that just stabilizes the system at the
-origin; a trajectory tracking infinite LQR controler using the linearized system's
-error dynamics; and a time varying infinite LQR feedback controller that uses a
-nonlinear, but simplified, version of the system's error dynamics. We also
-designed and implented an MPC controller using the linearized
-system dynamics, while incorporating state and control constraints.
+We designed and implemented three infinite LQR feedback controllers: an
+infinite LQR controller using the linearized system dynamics that stabilizes
+the system at the origin; a trajectory tracking infinite LQR controller using
+the linearized system's time invariant error dynamics; and a time varying
+infinite LQR feedback controller that uses a nonlinear, but simplified, version
+of the system's error dynamics. We also designed and implemented an MPC
+controller using the time invariant linearized system dynamics, while
+incorporating state and control constraints.
 
-To test our controllers, we wrote a resticted two-body simulator to simulate
+To test our controllers, we wrote a restricted two-body simulator to simulate
 the dynamics of both the target and chaser vehicles. For simplicity, we modeled
-the Earth as a perfect sphere and only considered the idealised dynamics due to
-gravity.
+the Earth as a perfect sphere and only considered the idealized dynamics due to
+the gravitational interaction between the Earth and the satellites.
 
 In order to further simplify the problem, several assumptions on the orbital
 parameters of the two spacecrafts, the configuration of actuators, the ideal
-behavior of the actuators, the control of the spacecraft attitude and knowledge
-of the spacecraft state will be made. These assumptions and their impact are
-discussed in the next section.
+behavior of the actuators, the control of the spacecraft attitude, and
+knowledge of the spacecraft state are made.
 
 \end{abstract}
 
@@ -82,27 +82,41 @@ discussed in the next section.
 
 \section{Introduction}
 
-The rendevous of two space craft, or more generally the relative positioning of
-two spacecraft in orbit, is a complex problem due to the dynamics involved. The
-first step in approaching the problem is to select a coordinate system in which
-the relative dynamics will be studied.
+The rendezvous of two spacecraft, or more generally the relative positioning of
+two spacecraft in orbit, is a complex problem due to the dynamics involved, and
+has applications to a wide variety of missions and customers. At present, one
+of the most important applications of this problem is in docking to space
+stations, such as the ISS, by Dragon, Starliner, Cygnus, and other vehicles.
+In addition, there are companies and organizations working on demonstrating the
+ability to collect debris from orbit, how to extend vehicle lifetimes through
+in orbit refueling, and how to assemble structures that are too large to be
+launched in a single piece (such as space telescopes or space stations).
 
 %==============================================================================
 
 \subsection{Coordinate Systems}
 
-In the rest of this document, we
-identify two space crafts: the target and the chaser (also refered to as the
-chief and follower). The target is assumed to
+
+In the rest of this document, we identify two spacecraft: the target and the
+chaser (also referred to as the chief and deputy). The target is assumed to
 have attitude control such that it maintains a consistent orientation with
-respect to earth's horizon, but is otherwise inert. The chaser is the vehicle
+respect to Earth's horizon but is otherwise inert. The chaser is the vehicle
 that we focus on controlling the position of.
 
-The Earth Centered Inertial (ECI) frame \cite{eci_frame} is used as our reference inertial frame
-and is used for numerical propagation of the system dynamics. As Earth orbits
-the sun, the ECI frame remains in the same orientation relative to the stars.
-Similiarly, as Earth rotates around its axis, the ECI frame reamins fixed
-relative to the stars.
+The first step in approaching the problem is to select a coordinate system in
+which the relative dynamics will be studied. We identify two reference frames.
+The Earth Centered Inertial (ECI) frame \cite{eci_frame} is used as our
+reference inertial frame and is used for numerical propagation of the system
+dynamics. As Earth orbits the sun, the ECI frame remains in the same
+orientation relative to the stars. Similarly, as Earth rotates around its axis,
+the ECI frame remains fixed relative to the stars. In the context of rendezvous
+and proximity operations, it is convenient to also identify the
+Radial-Transverse-Normal (RTN) coordinate frame centered with the origin at the
+center of mass of the target vehicle, as shown in figure \ref{fig:rtn-frame}.
+The three axes are aligned in the radial direction, along the vector from the
+center of the Earth to the target; the transverse direction, parallel to the
+target's velocity vector, and thus along the orbital path; and the normal
+direction, parallel to the target's orbital angular momentum vector.
 
 \begin{figure}[htbp]
     \centerline{\includegraphics[width=\linewidth]{./figures/rtn-frame.jpg}}
@@ -110,27 +124,21 @@ relative to the stars.
     \label{fig:rtn-frame}
 \end{figure}
 
-In the context of rendezvous and proximity operations, it is convenient to
-identify the the Radial-Transverse-Normal (RTN) coordinate frame centered with
-the origin at the center of mass of the target vehicle, as shown in figure
-\ref{fig:rtn-frame}. The three axes are aligned in the radial direction, along
-the vector from the origin of the center of the earth; the transverse
-direction, parallel to the velocity vector, and thus along the orbital path;
-and the normal direction, parralel to the orbit's angular momentum vector.
-
 Analyzing the chaser's dynamics and control in the RTN frame has the advantage
 of much smaller oscillations in the position-velocity coordinates as
-well as conveniently placing out target state at the origin.
+well as conveniently placing our target state at the origin.
 
 Notice that as the target orbits the central body, the RTN frame rotates
 relative to the inertial frame of the central body, so the relative position
-and dynamics of the chaser is not just a translation from the inertial frame.
+and dynamics of the chaser is not just a translation from the inertial frame
+(the actual dynamics are shown in the next section.).
 
 We also define our position-velocity (PV) state vector within both the ECI
 frame and the RTN frame as $[\vec{x}|\vec{v}]^T=[x,y,z,v_x,v_y,v_z]^T$ with
 respect to each frame. Though not the state representation primarily used in
 this project, several of the states from the classical orbital elements (COE)
-are of import. The full COE state vector is
+are important. Note, however, that the COE states are only defined in the ECI
+frame, not the RTN frame. The full COE state vector is
 
 \begin{equation}
     \label{eq:coes}
@@ -140,22 +148,22 @@ are of import. The full COE state vector is
         i &= \text{Inclination} \\
         \omega &= \text{Argument of perigee} \\
         \Omega &= \text{Right ascension of the ascending node (RAAN)} \\
-        f &= \text{True anomally}
+        f &= \text{True anomaly}
     \end{split}
 \end{equation}
 
-For this project, the three important states are: the eccentricity, which is the
-eccentricity of our orbit's ellipse; SMA, which (for our
-purposes) describes the orbital radius; and the true anomally, which describes,
-unlike the other states, where within the orbit we are, rather than the shape
-or orientation of the orbit.
+For this project, the three important orbital elements are: the eccentricity,
+which is the eccentricity of our orbit's ellipse; SMA, which (for our purposes)
+describes the orbital radius; and the true anomaly, which describes, unlike the
+other states, where within the orbit we are, rather than the shape or
+orientation of the orbit.
 
 %==============================================================================
 
 \subsection{Relative Dynamics}
 
 Within the RTN coordinate frame the following relative dynamics can be derived
-\cite{sullivan_comprehensive_2017}:
+from the equations for motion around a central body \cite{sullivan_comprehensive_2017}:
 
 \begin{equation}
     \label{eq:full-dynamics}
@@ -177,11 +185,11 @@ between the target and the chaser in the target's RTN frame.
 The first simplifying assumption we make is on the eccentricity of the target's
 orbit. If the target's orbit is near circular (the eccentricity is near 0),
 then $\dot{f}_c = \text{mean motion} = \sqrt{\frac{\mu}{a^3}}$, where $\mu$ is
-the earth's gravitational parameter ($\approx 3.986\cdot10^{14} \text{
+the Earth's gravitational parameter ($\approx 3.986\cdot10^{14} \text{
 m}^2/\text{s}$), and $a$ is the orbit's semi-major axis (SMA). Thus,
 $\dot{f}_c$ is constant and $\ddot{f}_c = 0$. In addition, the target's radius
-is constant and $r_c = a_c$, where $a_c$ is the target's SMA. This leads to the following
-simplified dynamics:
+is constant and $r_c = a_c$, where $a_c$ is the target's SMA. This leads to the
+following simplified dynamics:
 
 \begin{equation}
     \label{eq:circular-dynamics}
@@ -226,24 +234,24 @@ Which we can express in the standard state space form
 
 \subsection{Other Assumptions}
 
-The reality of controlling a spacecraft involves complex actuators, possibly including
-electric propulsion, mono-propellant attitude control systems, reaction wheels,
-control moment gyros, magnetic torquers, and others that all of their own
-dynamics and constraints (such as burn times, thrust profiles, discrete or
-continuous thrust levels, etc) that need
-to be accounted for in practice. For the purposes of this
-project, only the dynamics due to gravity and accelerations in the RTN frame
-are considered to simplify the analysis. Therefore, we are neglecting the
-attitude control of the chaser and the arrangement (and therefore selection of
-thrusters) such that we have have a force in the RTN frame as our only control
-input. However in reality, there may be signifcant efficiency gains that can be
-realized by considering the arrangement of thrusters when planning maneuvers.
+The reality of controlling a spacecraft involves complex actuators, possibly
+including electric propulsion, mono-propellant attitude control systems,
+reaction wheels, control moment gyros, magnetic torquers, and others, each with
+their own dynamics and constraints (such as burn times, thrust profiles,
+discrete or continuous thrust levels, etc) that need to be accounted for in
+practice. For this project, only the dynamics due to gravity and accelerations
+in the RTN frame are considered to simplify the analysis. Therefore, we are
+neglecting the attitude control of the chaser and the arrangement (and
+therefore selection) of thrusters such that we have have an idealized force in
+the RTN frame as our only control input. However, in reality there may be
+significant efficiency gains that can be realized by considering the
+arrangement of thrusters when planning maneuvers.
 
 In addition to assumptions on the actuators, we also assume that we have
-perfect knowledge of both the target's and chaser's state vector. However,
-state estimation for spacecraft is a signifcant challenge, and, depending on
-the location (e.g. close enough for relative positioning systems), the uncertainty
-in our knowledge can be quite significant.
+perfect knowledge of both the target's and chaser's state vectors. However,
+state estimation for spacecraft is a significant challenge and, depending on
+the location (e.g. close enough for relative positioning systems), the
+uncertainty in our knowledge can be quite significant.
 
 %==============================================================================
 %==============================================================================
@@ -251,24 +259,26 @@ in our knowledge can be quite significant.
 
 \section{Simulation}
 
-In order to test the controllers implemented, we created a simulation environment
-and several test scenarios to evaluate their performance \cite{rpo_repo}. The
-source code is available at
+In order to test the controllers implemented, we created a simulation
+environment and several test scenarios to evaluate their performance
+\cite{rpo_repo}. The source code is available at
 \url{https://github.com/ianruh/Rendezvous-Proximity}.
 
-We wrote a restricted two body simulator to propagate the target and chaser
-in the ECI frame around Earth. All nonidealities of the orbits, including
-oblateness perturbations, solar radiation pressure, lunar perturbations, etc.,
-were neglected. Due to the relatively small timescales, distances, and
-parameters of the scenarios, these effects would be small, though should not be
-ignored in practice.
+We wrote a restricted two body simulator to propagate the states of the target
+and chaser in the ECI frame around Earth, where only the gravitational
+interaction between the Earth and the single satellite is considered. All
+nonidealities of the orbits, including oblateness perturbations, solar
+radiation pressure, lunar perturbations, etc., were neglected. Due to the
+relatively small timescales, distances, and parameters of the scenarios, these
+effects would be small, though should not be ignored in practice.
 
-At every control time step, the chaser's state vector was
-converted into a PV vector in the RTN coordinate frame relative to the target.
-The simulator saturated the control at 0.01 m/s/s, which is reasonable for the monoprop
-thrusters on a relatively small satellite.
+At every control time step, the chaser's state vector was converted into a PV
+vector in the RTN coordinate frame relative to the target. The simulator
+saturated the control at 0.01  or 0.1 $\frac{m}{s^2}$, depending on the
+simulation, which is reasonable for the monoprop thrusters on a relatively
+small satellite.
 
-The controllers for tracking trajectories were provided a target state at each
+The trajectory tracking controllers were provided a target state at each
 control time step, where the target state was generated analytically or read
 (and interpolated) from a CSV file depending on the scenario.
 
@@ -278,13 +288,26 @@ control time step, where the target state was generated analytically or read
 
 \section{Controllers}
 
+We implemented four controllers. An infinite LQR controller that is able to
+stabilize the chaser within the vicinity of the target, two trajectory tracking
+infinite LQR controllers, and an MPC controller.
+
+To evaluate the performance of the trajectory tracking controllers, we
+calculate the integral of absolute error (IAE) for the actual trajectory vs the
+tracked trajectory:
+
+\begin{equation}
+    \text{IAE} = \int_0^{t_f} e(t) dt
+\end{equation}
+
 %==============================================================================
 
-\subsection{Infinte LQR Linear Controller}
+\subsection{Infinite LQR Linear Controller}
 
 Using the Hill-Clohessy-Wiltshire (\ref{eq:linear-dynamics})
 expressed as matrices in state space form, we
-implented an infinite LQR controller that solves the following problem:
+implemented an infinite LQR controller that solves the following optimal
+control problem:
 
 \begin{equation}
     \label{eq:linear-infinite-lqr}
@@ -321,11 +344,19 @@ Where ${\bf A}$ and ${\bf B}$ are defined as
     \end{aligned}
 \end{equation}
 
-and ${\bf Q} = I_{6\times 6}$, ${\bf R} = I_{3\times 3}$. This controller 
-stabilizes the chaser in the vicinity of the target. Two scenarios are shown in 
-figures \ref{fig:above20} and \ref{fig:leading2000}.
+and the ${\bf Q}$ \& ${\bf R}$ weight matrices were selected by starting from
+the heuristic weighting $\frac{1}{(\text{error bound})^2}$, then modified by
+trial and error. Then we solve the Algebraic Ricatti Equation (ARE) to find the
+static state feedback controller
 
-\todo{Q and R weight matrices}
+\begin{equation}
+    \vec{u}(t) = -R^{-1}B^T P \vec{x}
+\end{equation}
+
+This controller successfully stabilizes the chaser in the vicinity of the
+target, though the size of the region of stability appears to significantly
+depend on the weight matrices Q and R chosen. Two scenarios are shown in
+figures \ref{fig:above20} and \ref{fig:leading2000}.
 
 \begin{figure}[t]
     \centerline{\includegraphics[width=\linewidth]{./figures/simulation_outputs/above20InfiniteLQR-trajStateControl.jpg}}
@@ -339,13 +370,6 @@ figures \ref{fig:above20} and \ref{fig:leading2000}.
     \label{fig:leading2000}
 \end{figure}
 
-The linear infinite LQR control is able to stabilize the chaser around the
-target, though the size of this region of stability appears to be significantly
-dependent on the weight matrices Q and R chosen.
-
-These weights were selected by trial and error, but the starting point was
-chosen based on the heuristic of weighting $\frac{1}{(\text{error bound})^2}$.
-
 Aside from showing that our dynamics and basic approach work, these controllers
 would have little practical use for rendezvous and docking, where safety
 constraints on the spacecraft state (both position and velocity) are very
@@ -354,7 +378,7 @@ controllers, as discussed in the next section.
 
 %==============================================================================
 
-\subsection{Infinte LQR Time Invariant Trajectory Tracking Controller}
+\subsection{Infinite LQR Time Invariant Trajectory Tracking Controller}
 
 We implemented an LQR trajectory tracking controller based on the error
 dynamics of the linearized system in (\ref{eq:linear-dynamics}). 
@@ -378,34 +402,47 @@ Where ${\bf A}$ and ${\bf B}$ are the same as in
 (\ref{eq:linearized-state-space}). Conveniently, the error dynamics of the
 linearized system are identical to the dynamics of the linearized system.
 
-Being provided a trajectory to track, one which can be gaurenteed not to
+\begin{equation}
+    \label{eq:inv-linear-track-infinite-lqr}
+    \begin{split}
+        \min_{e, v} \ \ \  & \frac{1}{2} \int_{t_0}^{\inf} \left( e(t)^T {\bf Q}
+            e(t) + v(t)^T {\bf R} v(t) \right)dt \\
+        \text{s.t.   } & \dot{e} = {\bf{A}}e + {\bf B}v \\
+                     & e(t_0) = e_0
+    \end{split}
+\end{equation}
+
+Being provided a trajectory to track, one which can be guaranteed not to
 violate any safety constraints, is a more realistic scenario than just an LQR
 controller attempting to stabilize the system at the origin.
 
 We tested the trajectory tracking controllers on several 'box' trajectories at
-varying orbital radi from Geo Synchronous (~42,000 km) to LEO (~8,000 km).
+varying orbital radii from Geo Synchronous (~42,000 km) to LEO (~8,000 km).
 
-As the orbit got smaller, the disturbing acceleration required to cancel out
-the dyanmics of the system begins to saturate the inputs, causing a loss of
+As the orbit gets smaller, the disturbing acceleration required to cancel out
+the dynamics of the system begins to saturate the inputs, causing a loss of
 control. This behavior is expected, as the 'box' trajectories ignore the
 natural dynamics of the system, which become more significant the smaller the
-orbit gets.
+orbit gets, and therefore needing more control authority to track.
 
 \begin{figure}[t]
     \centerline{\includegraphics[width=\linewidth]{./figures/simulation_outputs/boxGeoInfiniteLQRLinearTracking-trajStateControl.jpg}}
-    \caption{Box trajectory tracking at GEO altitude ($\approx 35000$ km).}
+    \caption{Box trajectory tracking at GEO ($a \approx 42000$ km). This
+    simulation has an IAE of 10265.5.}
     \label{fig:boxGEO}
 \end{figure}
 
 \begin{figure}[t]
     \centerline{\includegraphics[width=\linewidth]{./figures/simulation_outputs/box30000InfiniteLQRLinearTracking-trajStateControl.jpg}}
-    \caption{Box trajectory tracking at 30000 km SMA.}
+    \caption{Box trajectory tracking at an SMA of 30000 km SMA. This simulation
+    has an IAE of 15581.3}
     \label{fig:box30000}
 \end{figure}
 
 \begin{figure}[t]
     \centerline{\includegraphics[width=\linewidth]{./figures/simulation_outputs/box20000InfiniteLQRLinearTracking-trajStateControl.jpg}}
-    \caption{Box trajectory tracking at 20000 km SMA.}
+    \caption{Box trajectory tracking at an SMA of 20000 km SMA. This simulation
+    has an IAE of $7.83\cdot10^6$.}
     \label{fig:box2000}
 \end{figure}
 
@@ -413,8 +450,8 @@ orbit gets.
 
 \subsection{Infinite LQR Time Varying Trajectory Tracking Controller}
 
-We implemnted an LQR trajectory tracking controller based off of the nonlinear
-dynamics shown in eq. \ref{eq:circular-dynamics}.
+We also implemented a time varying LQR trajectory tracking controller based off
+of the nonlinear dynamics shown in eq. \ref{eq:circular-dynamics}.
 
 \begin{equation}
     \label{eq:nonlinear-error-dynamics}
@@ -449,7 +486,7 @@ where
     \end{aligned}
 \end{equation}
 
-Rather than performing the deirvation by hand, we used the symbolic mathematics
+Rather than performing the derivation by hand, we used the symbolic mathematics
 library SymEngine \cite{symengine_repo} to derive the symbolic matrices for
 ${\bf A}(t)$ and ${\bf B}(t)$. From the symbolic matrices, we performed code
 generation at runtime to create a function for each symbolic matrix that, given
@@ -457,35 +494,82 @@ a vector of the desired state and control, returned ${\bf A}$ and ${\bf B}$.
 The generated code was compiled to a shared object and then loaded into memory
 and the function pointers retrieved.
 
+\begin{equation}
+    \label{eq:var-linear-track-infinite-lqr}
+    \begin{split}
+        \min_{e, v} \ \ \  & \frac{1}{2} \int_{t_0}^{\inf} \left( e(t)^T {\bf Q}
+            e(t) + v(t)^T {\bf R} v(t) \right)dt \\
+        \text{s.t.   } & \dot{e} = {\bf{A}}(t)e + {\bf B}(t)v \\
+                     & e(t_0) = e_0
+    \end{split}
+\end{equation}
+
+Figure \ref{fig:boxGEOvarying} shows a simulation run using the time varying
+trajectory tracking controller and the associated IAE. Notice that the IAE
+improved marginally (0.02\%) from the time invariant controller. This indicates
+that, at least in the near circular case at GEO, the nonlinear error dynamics
+that the invariant controller neglects play a very small role. For practical
+purposes, it may not be worth the  extra computational resources needed to use
+the time varying controller.
+
+\begin{figure}[t]
+    \centerline{\includegraphics[width=\linewidth]{./figures/simulation_outputs/boxGeoVaryingInfiniteLQRLinearTracking-trajStateControl.jpg}}
+    \caption{Box trajectory tracking at GEO ($a \approx 42000$ km) using the
+        time varying trajectory tracking controller. This
+    simulation has an IAE of 10263.3.}
+    \label{fig:boxGEOvarying}
+\end{figure}
+
 %==============================================================================
 
 \subsection{MPC Controller}
 
-We implemnted a discrete time MPC controller based off of Hill-Clohessy-Wiltshire equations
-(\ref{eq:linear-dynamics}), which constrained the maximum control, velocity,
-and state. The MPC controller was implented using \cite{cppmpc_repo}, and formulated
-as:
+We implemented a discrete time MPC controller based off of
+Hill-Clohessy-Wiltshire equations (\ref{eq:linear-dynamics}), which constrained
+the maximum control, velocity, and state. The MPC controller was implemented
+using CPPMPC \cite{cppmpc_repo}, and formulated as:
 
-\todo{This}
 \begin{equation}
     \label{eq:mpc}
     \begin{split}
-        \min_{x, u} \ \ \  & \frac{1}{2} \int_{t_0}^{\inf} \left( x(t)^T {\bf Q}
-            x(t) + u(t)^T {\bf R} u(t) \right)dt \\
-        \text{s.t.   } & \dot{x} = {\bf{A}}x + {\bf B}u \\
-                     & x(t_0) = x_0
+        \min_{\vec{x}_n, \vec{u}_n, n=1,...,N} \ \ \  & L_f(\vec{x}_N) + \sum_{n=0}^{N} \left( \vec{x}_n^T {\bf Q}
+            \vec{x}_n + \vec{u}_n^T {\bf R} \vec{u}_n \right)dt \\
+            \text{s.t.   } & \vec{x}_{n+1} = {\bf A}_d\vec{x}_n + {\bf
+            B}_d\vec{u}_n,\ \ n=1,...,N \\
+                           & \vec{u}_n \leq \vec{u}_{max},\ \ n=1,...,N \\
+                           & \vec{u}_n \geq \vec{u}_{min},\ \ n=1,...,N \\
+                           & \vec{x}(3:)_n \leq \vec{v}_{max},\ \ n=1,...,N \\
+                           & \vec{x}(3:)_n \geq \vec{v}_{min},\ \ n=1,...,N \\
+                        & \vec{x}_0 = x_0
     \end{split}
+\end{equation}
+
+Where
+
+\begin{equation}
+    \label{eq:ltv}
+    \begin{aligned}
+        {\bf A}_d &= I_{6\times6} + {\bf A}\Delta t \\
+        {\bf B}_d &= {\bf B}\Delta t
+    \end{aligned}
 \end{equation}
 
 As this was not formulated as a tracking controller (though it could be easily
 adapted to one by parameterizing goal state in the objective for every
-timestep), we tested this controller on just bringing the chaser to the target
+time step), we tested this controller on just bringing the chaser to the target
 when started within the vicinity of the target.
+
+The CPPMPC library solves it using an interior-point primal barrier method. It
+is capable of solving it in real time, though this depends on the time horizon
+selected. In the simulations run, it ran at $\approx30$Hz on average with a 20
+step horizon (using fairly aggressive hyper-parameters and warm starting each
+iteration).
 
 \begin{figure}[t]
     \centerline{\includegraphics[width=\linewidth]{./figures/simulation_outputs/mpcStabilize-trajStateControl.jpg}}
     \caption{MPC controller bringing the chaser to the target when starting
-    200M away.}
+    200 meters away. We finish at the target, but I would expect the optimal
+    control to be smoother, so some additional debugging may be needed.}
     \label{fig:mpc}
 \end{figure}
 
@@ -498,19 +582,35 @@ when started within the vicinity of the target.
 There are many extensions and variations on the system and the controllers that
 could be explored. Of interest to myself is extending the LTV
 controller to the noncircular case, where the first and second time derivatives
-of the true anomally come into the system. This would enable the controllers to
+of the true anomaly come into the system. This would enable the controllers to
 function in a larger vicinity of the target, as well in elliptical orbits.
 
-Similiarly, it would be interesting to extend the simulation and controllers to
-the restricted three body problem involving the earth, moon, and spacecraft. Of
+Similarly, it would be interesting to extend the simulation and controllers to
+the restricted three body problem involving the Earth, Moon, and spacecraft. Of
 particular interest, would be rendezvous and proximity operations in Near
-Rectilinear Halo Orbits about the Moon (these are extremely elliptical lunar
-orbits that verge on being closer to L2 halo orbits than lunar orbits) where
+Rectilinear Halo Orbits about the Moon (these are extremely elliptical orbits
+that blur the line between lunar orbits and L2 halo orbits) where
 the planned NASA Gateway manned space station will be.
 
 The assumptions made about the configuration and actuators could also be
-removed, specifically the arrangement of thrusters and it's impact the
+removed, specifically the arrangement of thrusters and its impact on the
 efficiency of maneuvers would be interesting.
+
+
+%==============================================================================
+%==============================================================================
+%==============================================================================
+
+\section*{Code}
+
+All of the code and raw outputs from this project can be found at 
+\url{https://github.com/ianruh/Rendezvous-Proximity}. The \texttt{master}
+branch head may not be in the same state as at the time of writing this report,
+but the branch \texttt{archive-me601} will be preserved with the original code.
+
+%==============================================================================
+%==============================================================================
+%==============================================================================
 
 \bibliography{mybibfile}
 \bibliographystyle{plain}
