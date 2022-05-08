@@ -343,6 +343,61 @@ void Record::plotChaserControlOverTime(matplot::axes_handle ax) const {
     ax->hold(matplot::off);
 }
 
+double Record::getDeltaV() const {
+    double running = 0.0;
+    for(size_t i = 0; i < this->times.size()-1; i++) {
+        double dt = this->times[i+1] - this->times[i];
+        running += dt*std::sqrt(
+                this->chaserControl[i](0) * this->chaserControl[i](0) +
+                this->chaserControl[i](1) * this->chaserControl[i](1) +
+                this->chaserControl[i](2) * this->chaserControl[i](2));
+    }
+    return running;
+}
+
+double Record::getITAE() const {
+    if(!this->trackedTrajectory) {
+        return 0.0;
+    }
+
+    std::vector<RTN> states;
+    for(size_t i = 0; i < this->chaserState.size(); i++) {
+        RTN rtn = pvToRtn(this->chaserState.at(i), this->targetState.at(i));
+        states.push_back(rtn);
+    }
+    
+    double running = 0.0;
+    for(size_t i = 0; i < this->times.size()-1; i++) {
+        double dt = this->times[i+1] - this->times[i];
+        Eigen::Vector3d error = states[i].head(3) - 
+            this->trackedTrajectory->at(i).head(3);
+        running += dt*error.norm();
+    }
+
+    return running;
+}
+
+double Record::getIAE() const {
+    if(!this->trackedTrajectory) {
+        return 0.0;
+    }
+
+    std::vector<RTN> states;
+    for(size_t i = 0; i < this->chaserState.size(); i++) {
+        RTN rtn = pvToRtn(this->chaserState.at(i), this->targetState.at(i));
+        states.push_back(rtn);
+    }
+    
+    double running = 0.0;
+    for(size_t i = 0; i < this->times.size()-1; i++) {
+        Eigen::Vector3d error = states[i].head(3) - 
+            this->trackedTrajectory->at(i).head(3);
+        running += error.norm();
+    }
+
+    return running;
+}
+
 Simulator::Simulator(std::shared_ptr<Vehicle> target,
         std::shared_ptr<Vehicle> chaser,
         double controlFrequency,
@@ -429,7 +484,12 @@ void Simulator::simulate(double duration,
         
         // Do the next timestep, no need to incrment this->time, as 
         // integrate does it for us.
-        this->integrate(dt);
+        try {
+            this->integrate(dt);
+        } catch (std::exception& e) {
+            std::cerr << "An exception occurred." << e.what() << '\n';
+          break;
+        }
     }
     if(!quiet) {
         std::cout << "\n";

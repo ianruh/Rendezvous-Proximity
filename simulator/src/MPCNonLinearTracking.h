@@ -35,11 +35,11 @@ class MPCNonLinearTrackingVehicle: public Simulator::Vehicle {
     MPCNonLinearTrackingVehicle(
             Simulator::PV state,
             double targetSMA,
-            size_t numSteps = 30,
+            size_t numSteps = 10,
             double maxAccel = 0.01,
             double timeStep = 20.0,
-            double finalStateWeight = 100.0,
-            double controlWeight = 0.01);
+            double finalStateWeight = 10.0,
+            double controlWeight = 0.1);
 
     Eigen::Vector3d getControl(
             [[maybe_unused]] double t,

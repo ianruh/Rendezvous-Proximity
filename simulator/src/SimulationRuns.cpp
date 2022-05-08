@@ -381,9 +381,9 @@ void mpcStabilize(const std::string& fileName) {
     Simulator::Simulator sim(
             target,
             chaser,
-            0.05,
+            0.5,
             1.0);
 
-    sim.simulate(2000, false);
+    sim.simulate(500, false);
     sim.record.write(fileName);
 }

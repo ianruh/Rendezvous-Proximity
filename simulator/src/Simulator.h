@@ -65,6 +65,10 @@ class Record {
     void plotChaserControlVectors(matplot::axes_handle ax) const;
     void plotDistanceOverTime(matplot::axes_handle ax) const;
     void plotChaserControlOverTime(matplot::axes_handle ax) const;
+
+    double getDeltaV() const;
+    double getITAE() const;
+    double getIAE() const;
 };
 
 class Simulator {

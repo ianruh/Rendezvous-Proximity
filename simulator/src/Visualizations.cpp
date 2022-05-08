@@ -1,5 +1,7 @@
 #include "Visualizations.h"
 #include <string>
+#include <fstream>
+#include <iostream>
 #include <matplot/matplot.h>
 
 void allInOneVisual(const Simulator::Record& record,
@@ -58,4 +60,25 @@ void trajectoryStateControl(const Simulator::Record& record,
     record.plotChaserRTNState2D(fig->current_axes(), 2);
 
     fig->save(fileName);
+}
+
+void statistics(const Simulator::Record& record,
+        const std::string& fileName) {
+    
+    double deltaV = record.getDeltaV();
+    double itae = record.getITAE();
+    double iae = record.getIAE();
+
+    std::ofstream file;
+    file.open(fileName);
+    file << "DeltaV (m/s): " << deltaV << "\n";
+    if(record.trackedTrajectory) {
+        file << "ITAE (m s): " << itae << "\n";
+        file << "IAE (m s): " << iae << "\n";
+    } else {
+        file << "ITAE (m s): N/A (No tracked trajectory)\n";
+        file << "IAE (m s): N/A (No tracked trajectory)\n";
+    }
+    file.close();
+
 }

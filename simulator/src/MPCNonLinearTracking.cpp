@@ -38,7 +38,7 @@ MPCNonLinearTrackingVehicle::MPCNonLinearTrackingVehicle(
     // Target SMA needed to construct the linearized A matrix
     this->targetSMA = targetSMA;
     //double n = std::sqrt(MU_EARTH/std::pow(this->targetSMA, 3));
-    double maxPos = 2000.0;
+    //double maxPos = 2000.0;
 
     // Just a constant
     auto n = SymEngine::Expression(SymEngine::real_double(std::sqrt(MU_EARTH/std::pow(this->targetSMA, 3))));
@@ -112,12 +112,12 @@ MPCNonLinearTrackingVehicle::MPCNonLinearTrackingVehicle(
 
     // Set the maximum position and maximum force.
     for(size_t i = 0; i < numSteps; i++) {
-        objective.inequalityConstraints.appendLessThan(x[i], maxPos);
-        objective.inequalityConstraints.appendGreaterThan(x[i], -1*maxPos);
-        objective.inequalityConstraints.appendLessThan(y[i], maxPos);
-        objective.inequalityConstraints.appendGreaterThan(y[i], -1*maxPos);
-        objective.inequalityConstraints.appendLessThan(z[i], maxPos);
-        objective.inequalityConstraints.appendGreaterThan(z[i], -1*maxPos);
+        //objective.inequalityConstraints.appendLessThan(x[i], maxPos);
+        //objective.inequalityConstraints.appendGreaterThan(x[i], -1*maxPos);
+        //objective.inequalityConstraints.appendLessThan(y[i], maxPos);
+        //objective.inequalityConstraints.appendGreaterThan(y[i], -1*maxPos);
+        //objective.inequalityConstraints.appendLessThan(z[i], maxPos);
+        //objective.inequalityConstraints.appendGreaterThan(z[i], -1*maxPos);
 
         objective.inequalityConstraints.appendLessThan(dx[i], maxAccel);
         objective.inequalityConstraints.appendGreaterThan(dx[i], -1*maxAccel);
@@ -150,14 +150,20 @@ MPCNonLinearTrackingVehicle::MPCNonLinearTrackingVehicle(
     }
 
     // Construct the objective
-    auto obj = finalStateWeight*(x[numSteps-1]*x[numSteps-1] +
-        y[numSteps-1]*y[numSteps-1] +
-        z[numSteps-1]*z[numSteps-1] +
-        100*vx[numSteps-1]*vx[numSteps-1] +
-        100*vy[numSteps-1]*vy[numSteps-1] +
-        100*vz[numSteps-1]*vz[numSteps-1]);
-    //auto obj = SymEngine::Expression(SymEngine::real_double(0.0));
+    //auto obj = finalStateWeight*(x[numSteps-1]*x[numSteps-1] +
+    //    y[numSteps-1]*y[numSteps-1] +
+    //    z[numSteps-1]*z[numSteps-1] +
+    //    vx[numSteps-1]*vx[numSteps-1] +
+    //    vy[numSteps-1]*vy[numSteps-1] +
+    //    vz[numSteps-1]*vz[numSteps-1]);
+    auto obj = SymEngine::Expression(SymEngine::real_double(0.0));
     for(size_t i = 0; i < numSteps; i++) {
+        obj = obj + finalStateWeight*(x[i]*x[i] +
+            y[i]*y[i] +
+            z[i]*z[i] +
+            vx[i]*vx[i] +
+            vy[i]*vy[i] +
+            vz[i]*vz[i]);
         obj = obj + controlWeight*(dx[i]*dx[i] + dy[i]*dy[i] + dz[i]*dz[i]);
     }
     objective.setObjective(obj);

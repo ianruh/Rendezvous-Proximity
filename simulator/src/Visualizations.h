@@ -10,4 +10,7 @@ void allInOneVisual(const Simulator::Record& record,
 void trajectoryStateControl(const Simulator::Record& record,
         const std::string& fileName);
 
+void statistics(const Simulator::Record& recod,
+        const std::string& fileName);
+
 #endif // SRC_VISUALIZATIONS_H_

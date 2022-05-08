@@ -46,6 +46,7 @@ void visualize(const std::string& recordName, const std::string& outputName) {
     allInOneVisual(record, outputName + ".jpg");
     trajectoryStateControl(record, outputName + "-trajStateControl.jpg");
     trajectoryStateControl(record, outputName + "-trajStateControl.svg");
+    statistics(record, outputName  + "-stats.md");
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
